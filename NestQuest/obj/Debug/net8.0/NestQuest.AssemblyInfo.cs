@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NestQuest")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a90e90790daaa16966104ecfbd8f2dd5576eea06")]
 [assembly: System.Reflection.AssemblyProductAttribute("NestQuest")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NestQuest")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

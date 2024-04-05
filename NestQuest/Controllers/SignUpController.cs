@@ -16,7 +16,7 @@ namespace NestQuest.Controllers
             _signUpService = signUpService;
         }
         [HttpPost("Guest")]
-        public async Task<ActionResult> SignUpGuest([FromBody] UsersDto userDto)
+        public async Task<ActionResult> SignUpGuest([FromBody] SignUpGuestDto userDto)
         {
             try
             {

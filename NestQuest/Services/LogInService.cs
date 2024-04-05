@@ -30,7 +30,7 @@ namespace NestQuest.Services
             _memoryCache = memoryCache;
         }
 
-        public string GenerateRandomCode(int length = 5)
+        public string GenerateRandomCode(int length = 6)
         {
             var random = new Random();
             string code = "";
@@ -104,11 +104,14 @@ namespace NestQuest.Services
             {
                 var result= await _context.Users
                                  .Where(e => e.Email == dto.Email)
+                                 .Include(e=> e.Host)
+                                 .Include(e=>e.Guest)
                                  .FirstOrDefaultAsync();
                 bool banned=false;
                 double rating=-1;
                 bool approved=true;
                 string type = "admin";
+                DateTime? startDate=null;
  
                 if (result == null)
                 {
@@ -121,37 +124,33 @@ namespace NestQuest.Services
 
                 if (result.UserType == "guest")
                 {
-                   var second_table = await _context.Guest
-                                    .Where(e=> e.Guest_Id==result.User_Id)
-                                    .FirstOrDefaultAsync();
-                    banned = second_table.banned;
-                    rating = second_table.rating;
+                    banned = result.Guest.banned;
+                    rating = result.Guest.rating;
                     type = "guest";
                 }
                 else if (result.UserType == "host")
                 {
-                    var second_table = await _context.Host
-                                    .Where(e => e.Host_Id == result.User_Id)
-                                    .FirstOrDefaultAsync();
-                    banned = second_table.banned;
-                    approved = second_table.aproved;
+                    banned = result.Host.banned;
+                    approved = result.Host.aproved;
+                    rating = result.Host.rating;
                     type = "host";
+                    startDate = result.Host.startDate;
                 }
                 
                 if (banned == true)
                 {
-                    return new { Banned = true, Email = result.Email, type = type, Two_Fa = false, approved=approved, rating=rating};
+                    return new { Banned = true, Email = result.Email, type = type, Two_Fa = false, approved=approved, rating=rating, startDate = startDate};
                 }
                 else if (approved == false)
                 {
-                    return new { Banned = false, Email = result.Email, type = type, Two_Fa = false, approved = approved, rating = rating};
+                    return new { Banned = false, Email = result.Email, type = type, Two_Fa = false, approved = approved, rating = rating, startDate = startDate };
                 }
                 else if (result.Two_Fa == true)
                 {
                     var code=GenerateRandomCode();
                     await Send2FAEmail(result.Email, code);
                     _memoryCache.Set(result.Email, code, TimeSpan.FromMinutes(1));
-                    return new { Banned = false, Email = result.Email, Type = type, Two_Fa = true, Approved= approved, rating = rating };
+                    return new { Banned = false, Email = result.Email, Type = type, Two_Fa = true, Approved= approved, rating = rating, startDate = startDate };
 
                 }
                 else { 
@@ -162,8 +161,10 @@ namespace NestQuest.Services
                         Email=result.Email,
                         Phone=result.Phone,
                         Birthday=result.Birthday,
-                        Two_fa=result.Two_Fa,
-                        Type=result.UserType,
+                        Nationality=result.Nationality,
+                        startDate = startDate,
+                        Two_fa =false,
+                        Type=type,
                         Approved=approved,
                         Rating=rating,
                         Banned=banned,
@@ -201,7 +202,7 @@ namespace NestQuest.Services
                             Email = rez.Email,
                             Phone = rez.Phone,
                             Birthday = rez.Birthday,
-                            Type = rez.UserType,
+                            Nationality = rez.Nationality,
                         };
                     }
                 }

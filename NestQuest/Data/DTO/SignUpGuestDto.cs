@@ -1,6 +1,6 @@
 ﻿namespace NestQuest.Data.DTO
 {
-    public class UsersDto
+    public class SignUpGuestDto
     {
         public string Name { get; set; }
         public string Surname { get; set; }
@@ -10,5 +10,6 @@
         public string Birthday { get; set; }
         public string UserType { get; set; }
         public bool Two_Fa { get; set; }
+        public string Nationality { get; set; }
     }
 }

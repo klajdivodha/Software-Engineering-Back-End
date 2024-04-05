@@ -10,7 +10,7 @@ namespace NestQuest.Services
     public interface ISignUpServices
     {
         Task<Users> SignUpHost(SignUpHostDto hostDto);
-        Task<Users> SignUpGuest(UsersDto userDto);
+        Task<Users> SignUpGuest(SignUpGuestDto userDto);
     }
     public class SignUpServices : ISignUpServices
     {
@@ -38,7 +38,7 @@ namespace NestQuest.Services
             return $"{Convert.ToBase64String(salt)}:{hashed}";
         }
 
-        public async Task<Users> SignUpGuest(UsersDto userDto)
+        public async Task<Users> SignUpGuest(SignUpGuestDto userDto)
         {
 
             try
@@ -53,6 +53,7 @@ namespace NestQuest.Services
                     Birthday = userDto.Birthday,
                     UserType = userDto.UserType,
                     Two_Fa = userDto.Two_Fa,
+                    Nationality = userDto.Nationality,
                 };
 
                 await _context.Users.AddAsync(newUser);
@@ -89,6 +90,7 @@ namespace NestQuest.Services
                     Birthday = hostDto.Birthday,
                     UserType = hostDto.UserType,
                     Two_Fa = hostDto.Two_Fa,
+                    Nationality = hostDto.Nationality,
                 };
 
                 await _context.Users.AddAsync(newUser);
@@ -99,7 +101,10 @@ namespace NestQuest.Services
                     Host_Id = newUser.User_Id,
                     aproved = false,
                     banned=false,
-                };
+                    startDate=DateTime.UtcNow,
+                    rating=5.0,
+
+            };
                 await _context.Host.AddAsync(host);
                 await _context.SaveChangesAsync();
                 return newUser;

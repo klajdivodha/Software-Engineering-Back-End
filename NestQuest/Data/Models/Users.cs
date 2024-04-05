@@ -22,14 +22,5 @@ namespace NestQuest.Data.Models
 
         [ForeignKey("Host_Id")]
         public virtual Hosts Host { get; set; }
-        
-        [ForeignKey("Owner_Id")]
-        public virtual Properties Properties { get; set; }
-
-        [ForeignKey("Guest_Id")]
-        public virtual Favorites Favorites { get; set; }
-
-        [ForeignKey("Guest_Id")]
-        public virtual Bookings Bookings { get; set; }
     }
 }

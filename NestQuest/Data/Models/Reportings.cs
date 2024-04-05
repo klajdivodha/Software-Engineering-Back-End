@@ -5,11 +5,8 @@ namespace NestQuest.Data.Models
 {
     public class Reportings
     {
-        [Key, ForeignKey("Bookings")]
         public int Guest_Id { get; set; }
-        [Key, ForeignKey("Bookings")]
         public int Property_Id { get; set; }
-        [Key, ForeignKey("Bookings")]
         public DateTime Start_Date { get; set; }
         public string Reporting_User_Type { get; set; }
         public string Status { get; set; }

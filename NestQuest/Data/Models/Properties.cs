@@ -34,14 +34,8 @@ namespace NestQuest.Data.Models
         public double Location_Rating { get;set;}
         public double Price_Rating { get;set;}
 
-        [ForeignKey("Users")]
-        public int Owner_Id { get; set;}
-
         [ForeignKey("Property_Id")]
-        public virtual Favorites Favorites { get; set; }
-
-        [ForeignKey("Property_Id")]
-        public virtual Bookings Bookings { get; set; }
+        public virtual Beds Beds { get; set; }
 
         [ForeignKey("Property_Id")]
         public virtual Utilities Utilities { get; set; }

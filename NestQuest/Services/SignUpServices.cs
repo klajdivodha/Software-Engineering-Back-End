@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.EntityFrameworkCore;
 using NestQuest.Data;
 using NestQuest.Data.DTO;
 using NestQuest.Data.Models;
@@ -43,6 +44,11 @@ namespace NestQuest.Services
 
             try
             {
+                var condition = await _context.Users.Where(e => e.Email == userDto.Email).FirstOrDefaultAsync();
+                if (condition != null)
+                {
+                    return null;
+                }
                 Users newUser = new Users
                 {
                     Name = userDto.Name,
@@ -51,7 +57,7 @@ namespace NestQuest.Services
                     Password = HashPassword(userDto.Password),
                     Phone = userDto.Phone,
                     Birthday = userDto.Birthday,
-                    UserType = userDto.UserType,
+                    UserType = "guest",
                     Two_Fa = userDto.Two_Fa,
                     Nationality = userDto.Nationality,
                 };
@@ -80,6 +86,10 @@ namespace NestQuest.Services
         {
             try
             {
+                var condition = await _context.Users.Where(e => e.Email == hostDto.Email).FirstOrDefaultAsync();
+                if (condition!=null) {
+                    return null;
+                }
                 Users newUser = new Users
                 {
                     Name = hostDto.Name,
@@ -88,7 +98,7 @@ namespace NestQuest.Services
                     Password = HashPassword(hostDto.Password),
                     Phone = hostDto.Phone,
                     Birthday = hostDto.Birthday,
-                    UserType = hostDto.UserType,
+                    UserType = "host",
                     Two_Fa = hostDto.Two_Fa,
                     Nationality = hostDto.Nationality,
                 };

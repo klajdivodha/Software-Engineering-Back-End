@@ -33,14 +33,15 @@ namespace NestQuest.Data.Models
         public double Communication_Rating { get;set;}
         public double Location_Rating { get;set;}
         public double Price_Rating { get;set;}
+        public double Overall_Rating { get; set; }
 
-        [ForeignKey("Property_Id")]
-        public virtual Beds Beds { get; set; }
+        [ForeignKey("Property_ID")]
+        public virtual ICollection<Beds> Beds { get; set; }
 
-        [ForeignKey("Property_Id")]
-        public virtual Utilities Utilities { get; set; }
+        [ForeignKey("Property_ID")]
+        public virtual  ICollection<Utilities> Utilities { get; set; }
 
-        [ForeignKey("Property_Id")]
-        public virtual Reviews Reviews { get; set; }
+        [ForeignKey("Property_ID")]
+        public virtual ICollection<Reviews> Reviews { get; set; }
     }
 }

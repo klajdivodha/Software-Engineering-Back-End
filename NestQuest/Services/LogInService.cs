@@ -10,6 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace NestQuest.Services
 {
@@ -224,7 +225,7 @@ namespace NestQuest.Services
             }
             catch (Exception ex)
             {
-                throw;
+                return false;
             }
         }
     }

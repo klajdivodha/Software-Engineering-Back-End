@@ -5,7 +5,7 @@ using NestQuest.Services;
 
 namespace NestQuest.Controllers
 {
-    [Route("api/signup")]
+    [Route("api/Signup")]
     [ApiController]
     public class SignUpController : ControllerBase
     {
@@ -21,7 +21,8 @@ namespace NestQuest.Controllers
             try
             {
                 var user = await _signUpService.SignUpGuest(userDto);
-                return Ok(user);
+                if (user == null) { return Conflict(); }
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -36,7 +37,8 @@ namespace NestQuest.Controllers
             try
             {
                 var user = await _signUpService.SignUpHost(Dto);
-                return Ok(user);
+                if (user == null) { return Conflict(); }
+                return Ok();
             }
             catch (Exception ex)
             {

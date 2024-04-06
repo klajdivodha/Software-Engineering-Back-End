@@ -21,6 +21,7 @@ namespace NestQuest.Controllers
             try
             {
                 var result = await _logInService.LogIn(dto);
+                if(result == null) { return NotFound();}
                 return Ok(result);
             }
             catch (Exception ex)
@@ -36,6 +37,7 @@ namespace NestQuest.Controllers
             try
             {
                 var result = await _logInService.Confirm_Fa(dto);
+                if (result == null) { return NotFound(); }
                 return Ok(result);
             }
             catch (Exception ex)
@@ -49,8 +51,13 @@ namespace NestQuest.Controllers
         {
             try
             {
-                var result = _logInService.Resend_Fa(email);
-                return Ok(result);
+                var result =await _logInService.Resend_Fa(email);
+                if (result == true)
+                {
+                    return Ok(result);
+                }
+                return BadRequest();
+
             }
             catch (Exception ex)
             {

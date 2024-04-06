@@ -11,7 +11,9 @@ namespace NestQuest.Data.Models
         public int Number {get; set;}
 
         [ForeignKey("Properties")]
-        public int Property_Id { get; set; }
+        public int Property_ID { get; set; }
+
+        public virtual Properties Properties { get; set; }
 
     }
 }

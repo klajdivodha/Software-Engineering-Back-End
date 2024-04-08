@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddScoped<ISignUpServices, SignUpServices>();
 builder.Services.AddScoped<ILogInService, LogInService>();
+builder.Services.AddScoped<IGuestServices, GuestServices>();
 
 builder.Services.AddMemoryCache();
 

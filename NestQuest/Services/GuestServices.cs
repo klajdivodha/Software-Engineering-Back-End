@@ -6,6 +6,8 @@ using NestQuest.Data.DTO;
 using NestQuest.Data.Models;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Security.Cryptography;
 
 namespace NestQuest.Services
 {
@@ -13,6 +15,12 @@ namespace NestQuest.Services
     {
         public Task<object[]> GuestAvaibleProperties(GestAvaiblePropertiesDto dto);
         public Task<ActionResult> PropertieInfo(int id);
+
+        public Task<object> GetGuest(int id);
+
+        public Task<int> ChangeEmail(int id, string email);
+
+        public Task<int> ChangePassword(ChangePasswordDto dto);
     }
     public class GuestServices : IGuestServices
     {
@@ -21,6 +29,129 @@ namespace NestQuest.Services
         public GuestServices(DBContext context)
         {
             _context = context;
+        }
+        private bool VerifyPassword(string storedHash, string providedPassword)
+        {
+            // Split the stored hash to get the salt and the hash components
+            var parts = storedHash.Split(':', 2);
+            if (parts.Length != 2)
+            {
+                throw new FormatException("The stored password hash is not in the expected format.");
+            }
+
+            var salt = Convert.FromBase64String(parts[0]);
+            var storedSubkey = parts[1];
+
+            // Hash the provided password using the same salt
+            string hashedProvidedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: providedPassword,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 256 / 8));
+
+            // Compare the hashes
+            return storedSubkey == hashedProvidedPassword;
+        }
+        private string HashPassword(string password)
+        {
+            byte[] salt = new byte[128 / 8];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+
+            string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 256 / 8));
+
+            return $"{Convert.ToBase64String(salt)}:{hashed}";
+        }
+
+        public async Task<int> ChangeEmail(int id, string email)
+        {
+            try
+            {
+                var result = await _context.Users
+                            .Where(u => u.User_Id == id)
+                            .FirstOrDefaultAsync();
+
+                if (result == null) { return -1; }
+                var condition = await _context.Users.Where(e => e.Email == email).FirstOrDefaultAsync();
+                if (condition != null)
+                {
+                    return -2;
+                }
+                result.Email = email;
+
+                var nr=await _context.SaveChangesAsync();
+                return nr;
+
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> ChangePassword(ChangePasswordDto dto)
+        {
+            try
+            {
+                var rezult = await _context.Users
+                        .Where(u => u.User_Id == dto.Id)
+                        .FirstOrDefaultAsync();
+                if (rezult == null) { return -1; }
+                if(VerifyPassword(rezult.Password, dto.Password))
+                {
+                    rezult.Password = HashPassword(dto.NewPassword);
+
+                    var nr=_context.SaveChanges();
+                    return nr;
+                }
+                else
+                {
+                    return -2;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetGuest(int id)
+        {
+            try
+            {
+                var guest = await _context.Users
+                    .Where(g => g.User_Id == id)
+                    .Select(g => new
+                    {
+                        g.Name,
+                        g.Surname,
+                        g.Email,
+                        g.Phone,
+                        g.Birthday,
+                        g.UserType,
+                        g.Nationality,
+                        g.Guest
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (guest == null)
+                {
+                    return null;
+                }
+                return guest;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<object[]> GuestAvaibleProperties(GestAvaiblePropertiesDto dto)
@@ -56,7 +187,7 @@ namespace NestQuest.Services
 
                 var availableProperties = properties.Where(prop => !notAvailableIds.Contains(prop.Property_ID)).ToArray();
 
-                return availableProperties;
+
                 if (availableProperties.Any())
                 {
                     return availableProperties;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using NestQuest.Data.DTO;
 using NestQuest.Services;
@@ -31,7 +32,7 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetPropertie/{id}")]
         public async Task<IActionResult> PropertieInfo(string id)
         {
             try
@@ -46,7 +47,63 @@ namespace NestQuest.Controllers
             catch {
                 return BadRequest();
             }
-           
+        }
+
+        [HttpGet("GetGuest/{id}")]
+
+        public async Task<IActionResult> GetGuest(string id)
+        {
+            try
+            {
+                int ID;
+                int.TryParse(id, out ID);
+                var result=await _guestServices.GetGuest(ID);
+                if (result == null) { return NotFound(); };
+                return Ok(result);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("ChangeEmail/{id}/{email}")]
+        public async Task<IActionResult> ChangeEmailAsync(string id, string email)
+        {
+            try
+            {
+                int ID;
+                int.TryParse(id, out ID);
+                var rezult = await _guestServices.ChangeEmail(ID, email);
+                if (rezult == -1) { return NotFound(); }
+                if (rezult == -2) { return Conflict(); }
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("ChangePassword")]
+
+        public async Task<IActionResult> ChangePassword([FromBody]ChangePasswordDto dto)
+        {
+            var rezult=-3;
+            try
+            {
+                Console.WriteLine(rezult);
+                rezult = await _guestServices.ChangePassword(dto);
+                if (rezult == -1) { return NotFound(); }
+                if (rezult== -2) { return Conflict(); }
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            { 
+                return BadRequest();
+            }
         }
     }
 }

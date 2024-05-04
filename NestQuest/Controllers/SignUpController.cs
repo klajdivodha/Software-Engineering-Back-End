@@ -26,7 +26,7 @@ namespace NestQuest.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound();
+                return BadRequest();
             }
 
         }
@@ -42,7 +42,7 @@ namespace NestQuest.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound();
+                return BadRequest();
             }
 
         }

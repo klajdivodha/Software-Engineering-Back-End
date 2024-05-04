@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using NestQuest.Data.DTO;
+using NestQuest.Data.Models;
 using NestQuest.Services;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -44,7 +45,8 @@ namespace NestQuest.Controllers
                 if (result == null) { return NotFound(); }
                 return Ok(result);
             }
-            catch {
+            catch
+            {
                 return BadRequest();
             }
         }
@@ -57,11 +59,11 @@ namespace NestQuest.Controllers
             {
                 int ID;
                 int.TryParse(id, out ID);
-                var result=await _guestServices.GetGuest(ID);
+                var result = await _guestServices.GetGuest(ID);
                 if (result == null) { return NotFound(); };
                 return Ok(result);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest();
             }
@@ -88,20 +90,138 @@ namespace NestQuest.Controllers
 
         [HttpPatch("ChangePassword")]
 
-        public async Task<IActionResult> ChangePassword([FromBody]ChangePasswordDto dto)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
-            var rezult=-3;
+            var rezult = -3;
             try
             {
                 Console.WriteLine(rezult);
                 rezult = await _guestServices.ChangePassword(dto);
                 if (rezult == -1) { return NotFound(); }
-                if (rezult== -2) { return Conflict(); }
+                if (rezult == -2) { return Conflict(); }
                 if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok();
             }
             catch (Exception ex)
-            { 
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPost("AddFavorites/{guest_id}/{property_id}")]
+        public async Task<IActionResult> AddFavorites(string guest_id, string property_id)
+        {
+            try
+            {
+                var result = await _guestServices.AddFavorites(int.Parse(guest_id), int.Parse(property_id));
+                if (result == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpDelete("DeleteFavorite/{guest_id}/{property_id}")]
+        public async Task<IActionResult> DeleteFavorite(string guest_id, string property_id)
+        {
+            try
+            {
+                var result = await _guestServices.DeleteFavorites(int.Parse(guest_id), int.Parse(property_id));
+                if(result == -1) { return NotFound(); }
+                if (result == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch(Exception ex) { 
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetFavorites/{id}")]
+        public async Task<IActionResult> GetFavorites(string id)
+        {
+            try
+            {
+                var result= await _guestServices.GetFavorites(int.Parse(id));
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("CheckAvailability")]
+        public async Task<IActionResult> CheckAvailability([FromBody] CheckAvailabilityDto dto)
+        {
+            try
+            {
+                var rezult = await _guestServices.CheckAvailability(dto);
+                if (rezult) { return Ok(); }
+                return Conflict();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+
+        }
+        [HttpPost("AddBooking")]
+        public async Task<IActionResult> AddBookings([FromBody] Bookings obj)
+        {
+            try
+            {
+                obj.Status = "upcoming";
+                var result= await _guestServices.AddBooking(obj);
+                if(result == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("CancelBooking")]
+        public async Task<IActionResult> CancelBooking(BookingDto dto)
+        {
+            try
+            {
+                var result=await _guestServices.CancelBooking(dto);
+                if (result == -1) { return NotFound(); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());
+            }
+        }
+
+        [HttpGet("GetBookings/{id}")]
+        public async Task<IActionResult> GetBookings(string id)
+        {
+            try
+            {
+                return Ok(await _guestServices.GetBookings(int.Parse(id)));
+            }
+            catch(Exception ex) 
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPost("AddReview")]
+        public async Task<IActionResult> AddReview([FromBody] AddReviewDto dto)
+        {
+            try
+            {
+                var result = await _guestServices.AddReview(dto);
+                if (result == 0) {return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
                 return BadRequest();
             }
         }

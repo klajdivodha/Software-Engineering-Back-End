@@ -21,7 +21,7 @@ namespace NestQuest.Data.Models
         public int Max_Nr_Of_Guests { get; set;}
         public bool Pets {  get; set;}
         public int Nr_Of_Baths { get; set;}
-        public int Nr_Of_ookings { get; set;}
+        public int Nr_Of_Bookings { get; set;}
         public string Checkin_Time { get; set;}
         public string Checkout_Time { get;set;}
         public bool Parties { get; set;}

@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
+using System.Linq;
 
 namespace NestQuest.Services
 {
@@ -21,6 +22,22 @@ namespace NestQuest.Services
         public Task<int> ChangeEmail(int id, string email);
 
         public Task<int> ChangePassword(ChangePasswordDto dto);
+
+        public Task<int> AddFavorites(int user_id,int property_id);
+
+        public Task<int> DeleteFavorites(int user_id,int property_id);
+
+        public Task<object[]> GetFavorites(int id);
+
+        public Task<bool> CheckAvailability(CheckAvailabilityDto dto);
+
+        public Task<int> AddBooking(Bookings obj);
+
+        public Task<int> CancelBooking(BookingDto dto);
+
+        public Task<object[]> GetBookings(int id);
+
+        public Task<int> AddReview(AddReviewDto dto);
     }
     public class GuestServices : IGuestServices
     {
@@ -179,7 +196,7 @@ namespace NestQuest.Services
 
                 var notAvailableIds = await _context.Bookings
                     .Where(b => properties.Select(prop => prop.Property_ID).Contains(b.Property_Id) &&
-                           b.Status== "upcomming" && 
+                           b.Status== "upcoming" && 
                            ((dto.StratDate >= b.Start_Date && dto.StratDate <= b.End_Date) ||
                             (dto.EndDate >= b.Start_Date && dto.EndDate <= b.End_Date)))
                     .Select(b => b.Property_Id)
@@ -226,6 +243,175 @@ namespace NestQuest.Services
 
             }
             catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AddFavorites(int user_id, int property_id)
+        {
+            try
+            {
+                Favorites obj=new Favorites();
+                obj.Property_Id = property_id;
+                obj.Guest_Id= user_id;
+
+                await _context.Favorites.AddAsync(obj);
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex) 
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> DeleteFavorites(int user_id, int property_id)
+        {
+            try
+            {
+                var rezult= await _context.Favorites
+                            .Where(f=> f.Property_Id == property_id && f.Guest_Id== user_id)
+                            .FirstOrDefaultAsync();
+                if(rezult == null) { return -1; }
+                _context.Favorites.Remove(rezult);
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object[]> GetFavorites(int id)
+        {
+            try
+            {
+                var rezult= await _context.Favorites
+                        .Where(f=> f.Guest_Id==id)
+                        .Select(f=> f.Property_Id)
+                        .ToArrayAsync();
+
+                if(rezult == null) { return []; }
+
+                var rez= await _context.Properties
+                    .Where(p => rezult.Contains(p.Property_ID))
+                    .Select(p => new
+                    {
+                        p.Name,
+                        p.Daily_Price,
+                        p.Address,
+                        p.Property_ID,
+                        p.Overall_Rating,
+                        p.Preium_Fee_Start,
+                        p.Type,
+                        p.City,
+                        p.Country,
+                    })
+                    .ToArrayAsync();
+
+                return rez;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> CheckAvailability(CheckAvailabilityDto dto)
+        {
+            try
+            {
+                var result = await _context.Bookings
+                    .Where(b => b.Property_Id == dto.Property_Id &&
+                                 b.Status == "upcoming" &&
+                                ((dto.StartDate >= b.Start_Date && dto.StartDate <= b.End_Date) ||
+                                 (dto.EndDate >= b.Start_Date && dto.EndDate <= b.End_Date)))
+                    .FirstOrDefaultAsync();
+
+                if (result != null) { return false; }
+
+                var rez = await _context.Properties
+                        .Where(p => p.Property_ID == dto.Property_Id && p.Max_Nr_Of_Guests >= dto.NrOfGuests)
+                        .FirstOrDefaultAsync();
+                if (rez == null) { return false; }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AddBooking(Bookings obj)
+        {
+            try
+            {
+                await _context.Bookings.AddAsync(obj);
+                var result= await _context.SaveChangesAsync();
+
+                var rez=_context.Properties
+                    .Where(p=> p.Property_ID==obj.Property_Id)
+                    .FirstOrDefault();
+                rez.Nr_Of_Bookings += 1;
+                _context.SaveChangesAsync();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> CancelBooking(BookingDto dto)
+        {
+            try
+            {
+                var result= await _context.Bookings
+                        .Where(b=> b.Property_Id == dto.Property_Id && b.Start_Date == dto.StartDate && b.BookingTime==dto.BookingTime)
+                        .FirstOrDefaultAsync();
+
+                if (result == null) { return -1; }
+                result.Status="canceled"; 
+                return await _context.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object[]> GetBookings(int id)
+        {
+            try
+            {
+                var result = await _context.Bookings
+                    .Where(b => b.Guest_Id == id)
+                    .ToArrayAsync();
+
+                if (result == null) { return [] ; }
+                return result;
+
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AddReview(AddReviewDto dto)
+        {
+            try
+            {
+                Reviews rev= new Reviews();
+                rev.Property_ID=dto.Property_id;
+                rev.Description = dto.Review;
+                
+                await _context.Reviews.AddAsync(rev);
+                return await _context.SaveChangesAsync();
+            }
+            catch(Exception ex)
             {
                 throw;
             }

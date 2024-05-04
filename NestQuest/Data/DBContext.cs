@@ -24,7 +24,7 @@ namespace NestQuest.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Bookings>()
-                .HasKey(b => new { b.Guest_Id, b.Property_Id, b.Start_Date });
+                .HasKey(b => new { b.BookingTime, b.Property_Id, b.Start_Date});
 
             modelBuilder.Entity<Reportings>()
                .HasKey(b => new { b.Guest_Id, b.Property_Id, b.Start_Date });

@@ -46,7 +46,7 @@ namespace NestQuest.Controllers
             }
 
         }
-        [HttpGet("{email}")]
+        [HttpGet("Resend_2FA/{email}")]
         public async Task<ActionResult> Resend_2FA(string email)
         {
             try

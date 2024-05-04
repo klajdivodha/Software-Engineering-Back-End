@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
+using System.Linq;
 
 namespace NestQuest.Services
 {
@@ -21,6 +22,12 @@ namespace NestQuest.Services
         public Task<int> ChangeEmail(int id, string email);
 
         public Task<int> ChangePassword(ChangePasswordDto dto);
+
+        public Task<int> AddFavorites(int user_id,int property_id);
+
+        public Task<int> DeleteFavorites(int user_id,int property_id);
+
+        public Task<object[]> GetFavorites(int id);
     }
     public class GuestServices : IGuestServices
     {
@@ -224,6 +231,75 @@ namespace NestQuest.Services
 
                 return new JsonResult(serializedResult);
 
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AddFavorites(int user_id, int property_id)
+        {
+            try
+            {
+                Favorites obj=new Favorites();
+                obj.Property_Id = property_id;
+                obj.Guest_Id= user_id;
+
+                await _context.Favorites.AddAsync(obj);
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex) 
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> DeleteFavorites(int user_id, int property_id)
+        {
+            try
+            {
+                var rezult= await _context.Favorites
+                            .Where(f=> f.Property_Id == property_id && f.Guest_Id== user_id)
+                            .FirstOrDefaultAsync();
+                if(rezult == null) { return -1; }
+                _context.Favorites.Remove(rezult);
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object[]> GetFavorites(int id)
+        {
+            try
+            {
+                var rezult= await _context.Favorites
+                        .Where(f=> f.Guest_Id==id)
+                        .Select(f=> f.Property_Id)
+                        .ToArrayAsync();
+
+                if(rezult == null) { return []; }
+
+                var rez= await _context.Properties
+                    .Where(p => rezult.Contains(p.Property_ID))
+                    .Select(p => new
+                    {
+                        p.Name,
+                        p.Daily_Price,
+                        p.Address,
+                        p.Property_ID,
+                        p.Overall_Rating,
+                        p.Preium_Fee_Start,
+                        p.Type,
+                        p.City,
+                        p.Country,
+                    })
+                    .ToArrayAsync();
+
+                return rez;
             }
             catch (Exception ex)
             {

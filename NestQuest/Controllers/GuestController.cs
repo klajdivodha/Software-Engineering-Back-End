@@ -225,5 +225,51 @@ namespace NestQuest.Controllers
                 return BadRequest();
             }
         }
+
+        [HttpPost("AddReporting")]
+        public async Task<IActionResult> AddReporting([FromBody]Reportings obj)
+        {
+            try
+            {
+                obj.Reporting_User_Type = "guest";
+                var result= await _guestServices.AddReporting(obj);
+                if (result == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("AddRatings")]
+        public async Task<IActionResult> AddRatings([FromBody] AddRatingsDto dto)
+        {
+            try
+            {
+                var rezult= await _guestServices.AddRatings(dto);
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            { 
+                return BadRequest(); 
+            }
+        }
+
+        [HttpPatch("AddHostRating/{id}/{rating}")]
+        public async Task<IActionResult> AddHostRating(string id, string rating)
+        {
+            try
+            {
+                var rezult = await _guestServices.RateHost(int.Parse(id),int.Parse(rating));
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();    
+            }
+        }
     }
 }

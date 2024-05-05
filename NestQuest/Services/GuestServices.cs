@@ -38,6 +38,12 @@ namespace NestQuest.Services
         public Task<object[]> GetBookings(int id);
 
         public Task<int> AddReview(AddReviewDto dto);
+
+        public Task<int> AddReporting(Reportings obj);
+
+        public Task<int> AddRatings(AddRatingsDto dto);
+
+        public Task<int> RateHost(int id, double rating);
     }
     public class GuestServices : IGuestServices
     {
@@ -187,6 +193,7 @@ namespace NestQuest.Services
                                                  p.Address,
                                                  p.Property_ID,
                                                  p.Overall_Rating,
+                                                 p.Nr_Of_Ratings,
                                                  p.Preium_Fee_Start,
                                                  p.Type,
                                                  p.City,
@@ -349,11 +356,16 @@ namespace NestQuest.Services
                 await _context.Bookings.AddAsync(obj);
                 var result= await _context.SaveChangesAsync();
 
-                var rez=_context.Properties
+                var rez=await _context.Properties
                     .Where(p=> p.Property_ID==obj.Property_Id)
-                    .FirstOrDefault();
-                rez.Nr_Of_Bookings += 1;
-                _context.SaveChangesAsync();
+                    .FirstOrDefaultAsync();
+
+                if(rez != null)
+                {
+                    rez.Nr_Of_Bookings += 1;
+                    _context.SaveChangesAsync();
+                }
+
 
                 return result;
             }
@@ -412,6 +424,61 @@ namespace NestQuest.Services
                 return await _context.SaveChangesAsync();
             }
             catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AddReporting(Reportings obj)
+        {
+            try
+            {
+                await _context.Reportings.AddAsync(obj);
+                return await _context.SaveChangesAsync();
+            }
+            catch( Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AddRatings(AddRatingsDto dto)
+        {
+            try
+            {
+                var rezult = await _context.Properties
+                        .Where(p => p.Property_ID == dto.Property_Id)
+                        .FirstOrDefaultAsync();
+                if(rezult == null) { return 0 ; }
+                rezult.Checkin_Rating += dto.Checkin_Rating;
+                rezult.Cleanliness_Rating += dto.Cleanliness_Rating;
+                rezult.Accuracy_Rating += dto.Accuracy_Rating;
+                rezult.Location_Rating += dto.Location_Rating;    
+                rezult.Communication_Rating=dto.Communication_Rating;
+                rezult.Price_Rating += dto.Price_Rating;
+                rezult.Nr_Of_Ratings += 1;
+                var nr = rezult.Nr_Of_Ratings;
+                rezult.Overall_Rating = (rezult.Overall_Rating + (rezult.Checkin_Rating / nr) + (rezult.Cleanliness_Rating / nr) + (rezult.Accuracy_Rating / nr) + (rezult.Location_Rating / nr) + (rezult.Communication_Rating / nr) + (rezult.Price_Rating / nr)) /6;
+
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> RateHost(int id,double rating)
+        {
+            try
+            {
+                var result= await _context.Host.Where(h=> h.Host_Id == id).FirstOrDefaultAsync();
+
+                result.rating += rating;
+                result.Nr_Of_Ratings += 1;
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
             {
                 throw;
             }

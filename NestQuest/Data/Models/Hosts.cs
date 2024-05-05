@@ -11,6 +11,7 @@ namespace NestQuest.Data.Models
         public bool aproved { get; set; }
         public bool banned { get; set; }
         public DateTime startDate { get; set; }
+        public int Nr_Of_Ratings { get; set; }
         public double rating { get; set; }
 
     }

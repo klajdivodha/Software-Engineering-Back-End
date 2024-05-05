@@ -69,6 +69,7 @@ namespace NestQuest.Services
                 {
                     Guest_Id = newUser.User_Id,
                     rating = 5.0,
+                    Nr_Of_Ratings = 1,
                     banned = false,
                 };
                 await _context.Guest.AddAsync(guest);
@@ -112,7 +113,8 @@ namespace NestQuest.Services
                     aproved = false,
                     banned=false,
                     startDate=DateTime.UtcNow,
-                    rating=5.0,
+                    Nr_Of_Ratings = 1,
+                    rating =5.0,
 
             };
                 await _context.Host.AddAsync(host);

@@ -8,10 +8,10 @@ namespace NestQuest.Data.Models
         // Foreign key and primary key
         [Key, ForeignKey("User")]
         public int Guest_Id { get; set; }
-
         // Navigation property
         public virtual Users User { get; set; }
         public double rating { get; set; }
+        public int Nr_Of_Ratings { get; set; }
         public bool banned { get; set; }
     }
 }

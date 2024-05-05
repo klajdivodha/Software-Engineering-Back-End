@@ -9,6 +9,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
 using System.Linq;
+using System.Net.Mail;
+using System.Net;
 
 namespace NestQuest.Services
 {
@@ -52,6 +54,41 @@ namespace NestQuest.Services
         public GuestServices(DBContext context)
         {
             _context = context;
+        }
+
+        public async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
+        {
+            var fromAddress = new MailAddress("nestquest2@gmail.com", "Nest Quest");
+            var toAddress = new MailAddress(toEmailAddress);
+            const string fromPassword = "rtbt zmpo lngl uajx";
+            string subject = Subject;
+            string body = content;
+
+            try
+            {
+                using (var smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                })
+                using (var message = new MailMessage(fromAddress, toAddress)
+                {
+                    Subject = subject,
+                    Body = body
+                })
+                {
+                    await smtp.SendMailAsync(message);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
         private bool VerifyPassword(string storedHash, string providedPassword)
         {
@@ -109,8 +146,11 @@ namespace NestQuest.Services
                     return -2;
                 }
                 result.Email = email;
-
                 var nr=await _context.SaveChangesAsync();
+
+                SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
+                    "Email Change");
+
                 return nr;
 
             }
@@ -356,6 +396,8 @@ namespace NestQuest.Services
                 await _context.Bookings.AddAsync(obj);
                 var result= await _context.SaveChangesAsync();
 
+                
+
                 var rez=await _context.Properties
                     .Where(p=> p.Property_ID==obj.Property_Id)
                     .FirstOrDefaultAsync();
@@ -366,12 +408,32 @@ namespace NestQuest.Services
                     _context.SaveChangesAsync();
                 }
 
+                await SendBookingEmail(obj.Guest_Id, obj.Amount, obj.Property_Name, obj.Start_Date, obj.End_Date);
 
                 return result;
             }
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+
+        public async Task<bool> SendBookingEmail(int id,double amount, string name, DateTime Start_Date, DateTime End_Date)
+        {
+            try
+            {
+                var result = await _context.Users.Where(u => u.User_Id == id).Select(u => new { u.Email, u.Name }).FirstOrDefaultAsync();
+                var body = $"{result.Name} hello!\n" + $"You just successfully booked {name}.\n" +
+                    $"Your booking duration is from {Start_Date.ToString("yyyy-MM-dd")} up to {End_Date.ToString("yyyy-MM-dd")}\n" +
+                    $"for the amount of {amount} €";
+
+                SendEmail(result.Email, body,"Booking confirmation");
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
 
@@ -384,13 +446,33 @@ namespace NestQuest.Services
                         .FirstOrDefaultAsync();
 
                 if (result == null) { return -1; }
-                result.Status="canceled"; 
-                return await _context.SaveChangesAsync();
+                result.Status="canceled";
+                var nr= await _context.SaveChangesAsync();
+
+                await SendCancelationEmail(result.Guest_Id, result.Amount, result.Property_Name, result.Start_Date, result.End_Date);
+
+                return nr;
 
             }
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+        public async Task<bool> SendCancelationEmail(int id, double amount, string name, DateTime Start_Date, DateTime End_Date)
+        {
+            try
+            {
+                var result = await _context.Users.Where(u => u.User_Id == id).Select(u => new { u.Email, u.Name }).FirstOrDefaultAsync();
+                var body = $"{result.Name} hello!\n" + $"You just successfully canceld your booking with {name}.\n" +
+                    $"Your booking duration was from {Start_Date.ToString("yyyy-MM-dd")} up to {End_Date.ToString("yyyy-MM-dd")}\n";
+
+                SendEmail(result.Email, body, "Booking Cancelation");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
 

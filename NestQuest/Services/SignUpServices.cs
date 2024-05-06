@@ -74,6 +74,21 @@ namespace NestQuest.Services
                 };
                 await _context.Guest.AddAsync(guest);
                 await _context.SaveChangesAsync();
+
+                string fileName = $"{newUser.User_Id}.jpg";
+                string photosDirectoryPath = @"C:\Users\User\Desktop\photos\users";
+
+                if (!Directory.Exists(photosDirectoryPath))
+                {
+                    Directory.CreateDirectory(photosDirectoryPath);
+                }
+
+                string filePath = Path.Combine(photosDirectoryPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await userDto.photo.CopyToAsync(stream);
+                }
                 return newUser;
             }
             catch (Exception ex)
@@ -119,6 +134,22 @@ namespace NestQuest.Services
             };
                 await _context.Host.AddAsync(host);
                 await _context.SaveChangesAsync();
+
+                string fileName = $"{newUser.User_Id}.jpg";
+                string photosDirectoryPath = @"C:\Users\User\Desktop\photos\users";
+
+                if (!Directory.Exists(photosDirectoryPath))
+                {
+                    Directory.CreateDirectory(photosDirectoryPath);
+                }
+
+                string filePath = Path.Combine(photosDirectoryPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await hostDto.photo.CopyToAsync(stream);
+                }
+
                 return newUser;
             }
             catch (Exception ex)

@@ -21,6 +21,8 @@ namespace NestQuest.Services
 
         public Task<object> GetGuest(int id);
 
+        public Task<object> GetHost(int id);
+
         public Task<int> ChangeEmail(int id, string email);
 
         public Task<int> ChangePassword(ChangePasswordDto dto);
@@ -41,11 +43,11 @@ namespace NestQuest.Services
 
         public Task<int> AddReview(AddReviewDto dto);
 
-        public Task<int> AddReporting(Reportings obj);
+        public Task<int> AddReporting(AddReportingsDto dto);
 
-        public Task<int> AddRatings(AddRatingsDto dto);
+        public Task<object> AddRatings(AddRatingsDto dto);
 
-        public Task<int> RateHost(int id, double rating);
+        public Task<object> RateHost(int id, double rating);
     }
     public class GuestServices : IGuestServices
     {
@@ -233,7 +235,6 @@ namespace NestQuest.Services
                                                  p.Address,
                                                  p.Property_ID,
                                                  p.Overall_Rating,
-                                                 p.Nr_Of_Ratings,
                                                  p.Preium_Fee_Start,
                                                  p.Type,
                                                  p.City,
@@ -511,12 +512,38 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<int> AddReporting(Reportings obj)
+        public async Task<int> AddReporting(AddReportingsDto dto)
         {
             try
             {
+                Reportings obj = new Reportings();
+                obj.Guest_Id = dto.Guest_Id;
+                obj.Property_Id = dto.Property_Id;
+                obj.Start_Date = dto.Start_Date;
+                obj.Reporting_User_Type = dto.Reporting_User_Type;
+                obj.Status = dto.Status;
+                obj.Fine = dto.Fine;
+                obj.Description = dto.Description;
+
                 await _context.Reportings.AddAsync(obj);
+
+                string photosDirectoryPath = @"C:\Users\User\Desktop\photos\reportings";
+
+                string fileName = $"{dto.Guest_Id}{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+
+                if (!Directory.Exists(photosDirectoryPath))
+                {
+                    Directory.CreateDirectory(photosDirectoryPath);
+                }
+
+                string filePath = Path.Combine(photosDirectoryPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.photo.CopyToAsync(stream);
+                }
                 return await _context.SaveChangesAsync();
+
             }
             catch( Exception ex)
             {
@@ -524,14 +551,14 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<int> AddRatings(AddRatingsDto dto)
+        public async Task<object> AddRatings(AddRatingsDto dto)
         {
             try
             {
                 var rezult = await _context.Properties
                         .Where(p => p.Property_ID == dto.Property_Id)
                         .FirstOrDefaultAsync();
-                if(rezult == null) { return 0 ; }
+                if(rezult == null) { return null; }
                 rezult.Checkin_Rating += dto.Checkin_Rating;
                 rezult.Cleanliness_Rating += dto.Cleanliness_Rating;
                 rezult.Accuracy_Rating += dto.Accuracy_Rating;
@@ -540,9 +567,10 @@ namespace NestQuest.Services
                 rezult.Price_Rating += dto.Price_Rating;
                 rezult.Nr_Of_Ratings += 1;
                 var nr = rezult.Nr_Of_Ratings;
-                rezult.Overall_Rating = (rezult.Overall_Rating + (rezult.Checkin_Rating / nr) + (rezult.Cleanliness_Rating / nr) + (rezult.Accuracy_Rating / nr) + (rezult.Location_Rating / nr) + (rezult.Communication_Rating / nr) + (rezult.Price_Rating / nr)) /6;
-
-                return await _context.SaveChangesAsync();
+                rezult.Overall_Rating = ((rezult.Checkin_Rating / nr) + (rezult.Cleanliness_Rating / nr) + (rezult.Accuracy_Rating / nr) + (rezult.Location_Rating / nr) + (rezult.Communication_Rating / nr) + (rezult.Price_Rating / nr)) /6;
+                var x= await _context.SaveChangesAsync();
+                if (x == 0) { return null; }
+                return new { rezult.Checkin_Rating, rezult.Cleanliness_Rating, rezult.Accuracy_Rating, rezult.Location_Rating, rezult.Communication_Rating, rezult.Price_Rating, rezult.Nr_Of_Ratings };
             }
             catch (Exception ex)
             {
@@ -550,20 +578,58 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<int> RateHost(int id,double rating)
+        public async Task<object> RateHost(int id,double rating)
         {
             try
             {
                 var result= await _context.Host.Where(h=> h.Host_Id == id).FirstOrDefaultAsync();
 
+                if(result == null) { return null; }
                 result.rating += rating;
                 result.Nr_Of_Ratings += 1;
-                return await _context.SaveChangesAsync();
+                var nr=await _context.SaveChangesAsync();
+                if (nr == 0)
+                {
+                    return null;
+                }
+                return new { result.rating, result.Nr_Of_Ratings };
             }
             catch (Exception ex)
             {
                 throw;
             }
         }
+
+        public async Task<object> GetHost(int id)
+        {
+            try
+            {
+                var host = await _context.Users
+                    .Where(g => g.User_Id == id)
+                    .Select(g => new
+                    {
+                        g.Name,
+                        g.Surname,
+                        g.Email,
+                        g.Phone,
+                        g.Birthday,
+                        g.UserType,
+                        g.Nationality,
+                        g.Host
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (host == null)
+                {
+                    return null;
+                }
+                return host;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
     }
 }

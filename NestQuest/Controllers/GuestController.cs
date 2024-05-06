@@ -52,7 +52,6 @@ namespace NestQuest.Controllers
         }
 
         [HttpGet("GetGuest/{id}")]
-
         public async Task<IActionResult> GetGuest(string id)
         {
             try
@@ -227,29 +226,30 @@ namespace NestQuest.Controllers
         }
 
         [HttpPost("AddReporting")]
-        public async Task<IActionResult> AddReporting([FromBody]Reportings obj)
+        public async Task<IActionResult> AddReporting([FromForm] AddReportingsDto dto)
         {
             try
             {
-                obj.Reporting_User_Type = "guest";
-                var result= await _guestServices.AddReporting(obj);
+                dto.Reporting_User_Type = "guest";
+                dto.Status = "pending";
+                var result= await _guestServices.AddReporting(dto);
                 if (result == 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok();
             }
             catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(ex.ToString());
             }
         }
 
-        [HttpPatch("AddRatings")]
+        [HttpPatch("AddPropertyRatings")]
         public async Task<IActionResult> AddRatings([FromBody] AddRatingsDto dto)
         {
             try
             {
                 var rezult= await _guestServices.AddRatings(dto);
-                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
-                return Ok();
+                if (rezult == null) { return StatusCode(500, "Internal Server Error"); }
+                return Ok(rezult);
             }
             catch (Exception ex)
             { 
@@ -263,12 +263,29 @@ namespace NestQuest.Controllers
             try
             {
                 var rezult = await _guestServices.RateHost(int.Parse(id),int.Parse(rating));
-                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
-                return Ok();
+                if (rezult == null) { return StatusCode(500, "Internal Server Error"); }
+                return Ok(rezult);
             }
             catch (Exception ex)
             {
                 return BadRequest();    
+            }
+        }
+
+        [HttpGet("GetHost/{id}")]
+        public async Task<IActionResult> GetHost(string id)
+        {
+            try
+            {
+                int ID;
+                int.TryParse(id, out ID);
+                var result = await _guestServices.GetHost(ID);
+                if (result == null) { return NotFound(); };
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
             }
         }
     }

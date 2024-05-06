@@ -10,5 +10,6 @@
         public string Birthday { get; set; }
         public bool Two_Fa { get; set; }
         public string Nationality { get; set; }
+        public IFormFile photo { get; set; }
     }
 }

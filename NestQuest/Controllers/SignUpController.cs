@@ -16,7 +16,7 @@ namespace NestQuest.Controllers
             _signUpService = signUpService;
         }
         [HttpPost("SignUpGuest")]
-        public async Task<ActionResult> SignUpGuest([FromBody] SignUpGuestDto userDto)
+        public async Task<ActionResult> SignUpGuest([FromForm] SignUpGuestDto userDto)
         {
             try
             {
@@ -32,7 +32,7 @@ namespace NestQuest.Controllers
         }
 
         [HttpPost("SignUpHost")]
-        public async Task<ActionResult> SignUpHost([FromBody] SignUpHostDto Dto)
+        public async Task<ActionResult> SignUpHost([FromForm] SignUpHostDto Dto)
         {
             try
             {

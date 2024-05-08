@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<ISignUpServices, SignUpServices>();
 builder.Services.AddScoped<ILogInService, LogInService>();
 builder.Services.AddScoped<IGuestServices, GuestServices>();
+builder.Services.AddScoped<IAdminServices, AdminServices>();
 
 builder.Services.AddMemoryCache();
 

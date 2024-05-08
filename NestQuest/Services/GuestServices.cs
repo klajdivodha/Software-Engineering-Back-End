@@ -522,16 +522,16 @@ namespace NestQuest.Services
                 obj.Property_Id = dto.Property_Id;
                 obj.BookingTime=dto.BookingTime;
                 obj.Start_Date = dto.Start_Date;
-                obj.Reporting_User_Type = dto.Reporting_User_Type;
-                obj.Status = dto.Status;
-                obj.Fine = dto.Fine;
+                obj.Reporting_User_Type = "guest";
+                obj.Status = "pending";
+                obj.Fine = null;
                 obj.Description = dto.Description;
 
                 await _context.Reportings.AddAsync(obj);
 
                 string photosDirectoryPath = @"C:\Users\User\Desktop\photos\reportings";
 
-                string fileName = $"{dto.Guest_Id}{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+                string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
 
                 if (!Directory.Exists(photosDirectoryPath))
                 {

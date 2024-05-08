@@ -230,8 +230,6 @@ namespace NestQuest.Controllers
         {
             try
             {
-                dto.Reporting_User_Type = "guest";
-                dto.Status = "pending";
                 var result= await _guestServices.AddReporting(dto);
                 if (result == 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok();

@@ -8,6 +8,10 @@ namespace NestQuest.Services
         public Task<object> GetAdmin(int id);
         public Task<object[]> GetNotApprovedHosts();
         public Task<int> ApproveHost(int id);
+        public Task<int> DontApproveHost(int id);
+        public Task<object[]> GetGuestReportings();
+
+        public Task<object[]> GetHostReportings();
     }
     public class AdminServices : IAdminServices
     {
@@ -36,6 +40,28 @@ namespace NestQuest.Services
             }
         }
 
+        public async Task<int> DontApproveHost(int id)
+        {
+            try
+            {
+                var rezult = await _context.Users
+                        .Where(u => u.User_Id == id && u.UserType=="host")
+                        .FirstOrDefaultAsync();
+                if (rezult == null) { return -1; }
+                _context.Remove(rezult);
+                var rez= await _context.Host
+                        .Where(h=>h.Host_Id==id)
+                        .FirstOrDefaultAsync();
+                _context.Remove(rez);
+
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<object> GetAdmin(int id)
         {
                 
@@ -52,6 +78,38 @@ namespace NestQuest.Services
                 throw;
             }
                 
+        }
+
+        public async Task<object[]> GetGuestReportings()
+        {
+            try
+            {
+                var rezult= await _context.Reportings
+                        .Where(r=>r.Reporting_User_Type=="guest" && r.Status=="pending")
+                        .ToArrayAsync();
+                if (rezult == null) { return []; }
+                return rezult;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object[]> GetHostReportings()
+        {
+            try
+            {
+                var rezult = await _context.Reportings
+                        .Where(r => r.Reporting_User_Type == "host" && r.Status == "pending")
+                        .ToArrayAsync();
+                if (rezult == null) { return []; }
+                return rezult;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<object[]> GetNotApprovedHosts()

@@ -59,5 +59,47 @@ namespace NestQuest.Controllers
                 return BadRequest();
             }
         }
+
+        [HttpDelete("DontApproveHost/{id}")]
+        public async Task<IActionResult> DontApproveHost(string id)
+        {
+            try
+            {
+                var rezult= await _adminServices.DontApproveHost(int.Parse(id));
+                if(rezult == -1) { return NotFound(); } 
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error");}
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetGuestReportings")]
+        public async Task<IActionResult> GetGuestReportings()
+        {
+            try
+            {
+                return Ok(await _adminServices.GetGuestReportings());
+            }
+            catch(Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetHostReportings")]
+        public async Task<IActionResult> GetHostReportings()
+        {
+            try
+            {
+                return Ok(await _adminServices.GetHostReportings());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
     }
 }

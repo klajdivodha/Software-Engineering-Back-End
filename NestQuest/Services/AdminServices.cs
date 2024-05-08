@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NestQuest.Data;
+using NestQuest.Data.DTO.AdminDto;
+using NestQuest.Data.Models;
+using System.Net.Mail;
+using System.Net;
 
 namespace NestQuest.Services
 {
@@ -10,8 +14,9 @@ namespace NestQuest.Services
         public Task<int> ApproveHost(int id);
         public Task<int> DontApproveHost(int id);
         public Task<object[]> GetGuestReportings();
-
         public Task<object[]> GetHostReportings();
+        public Task<int> DontAppropeveReporting(ReportingsDto dto);
+        public Task<int> AppropeveGuestReporting(AppropeveGuestReportingDto dto);
     }
     public class AdminServices : IAdminServices
     {
@@ -20,6 +25,86 @@ namespace NestQuest.Services
         public AdminServices(DBContext context)
         {
             _context = context;
+        }
+
+        public async Task<int> AppropeveGuestReporting(AppropeveGuestReportingDto dto)
+        {
+            try
+            {
+                var rezult = await _context.Reportings
+                    .Where(r => r.Property_Id == dto.Property_id && r.Start_Date == dto.StarDate)
+                    .FirstOrDefaultAsync();
+                if( rezult== null ) { return -1; }
+                rezult.Status = "approved";
+                rezult.Fine = dto.Fine;
+                var NR = await _context.SaveChangesAsync();
+                await SideWorkApproveGuestReporting(rezult);
+                return NR;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
+        {
+            var fromAddress = new MailAddress("nestquest2@gmail.com", "Nest Quest");
+            var toAddress = new MailAddress(toEmailAddress);
+            const string fromPassword = "rtbt zmpo lngl uajx";
+            string subject = Subject;
+            string body = content;
+
+            try
+            {
+                using (var smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                })
+                using (var message = new MailMessage(fromAddress, toAddress)
+                {
+                    Subject = subject,
+                    Body = body
+                })
+                {
+                    await smtp.SendMailAsync(message);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<int> SideWorkApproveGuestReporting(Reportings obj)
+        {
+            try
+            {
+                var count=await _context.Reportings.Where(r=>r.Property_Id==obj.Property_Id && r.Status=="approved" && r.Reporting_User_Type=="guest").CountAsync();
+                if (count >= 3)
+                {
+                    var hostId = await _context.Properties.Where(p => p.Property_ID == obj.Property_Id).FirstOrDefaultAsync();
+                    hostId.Availability = false;
+                    var host = await _context.Users
+                        .Where(u => u.User_Id == hostId.Owner_ID)
+                        .Select(u => new { u.Host,u.Name, u.Email })
+                        .FirstOrDefaultAsync();
+                    host.Host.banned = true;
+                    await _context.SaveChangesAsync();
+                    await SendEmail(host.Email, $"Hello {host.Name}! We would like to informe you that you have been banned from our app.","Importat information!");
+                }
+                return 0;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<int> ApproveHost(int id)
@@ -35,6 +120,23 @@ namespace NestQuest.Services
                 return await _context.SaveChangesAsync();
             }
             catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> DontAppropeveReporting(ReportingsDto dto)
+        {
+            try
+            {
+                var rezult= await _context.Reportings
+                    .Where(r=> r.Property_Id == dto.Property_id && r.Start_Date == dto.StarDate)
+                    .FirstOrDefaultAsync();
+                if(rezult == null) { return -1; }
+                rezult.Status = "notapproved";
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
             {
                 throw;
             }

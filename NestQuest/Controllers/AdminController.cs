@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NestQuest.Data.DTO.AdminDto;
 using NestQuest.Services;
 
 namespace NestQuest.Controllers
@@ -99,6 +100,38 @@ namespace NestQuest.Controllers
             catch (Exception ex)
             {
                 return BadRequest();
+            }
+        }
+
+        [HttpPatch("DontAppropeveReporting")]
+        public async Task<IActionResult> DontAppropeveReporting([FromBody]ReportingsDto dto)
+        {
+            try
+            {
+                var rezult= await _adminServices.DontAppropeveReporting(dto);
+                if(rezult == -1) { return NotFound(dto); }
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("AppropeveGuestReporting")]
+        public async Task<IActionResult> AppropeveGuestReporting([FromBody] AppropeveGuestReportingDto dto)
+        {
+            try
+            {
+                var rezult = await _adminServices.AppropeveGuestReporting(dto);
+                if(rezult == -1) { return NotFound(); }
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.ToString());
             }
         }
     }

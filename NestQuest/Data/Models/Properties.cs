@@ -8,7 +8,7 @@ namespace NestQuest.Data.Models
         [Key]
         public int Property_ID { get; set; }
         public int Owner_ID { get; set; }
-        public bool availability { get; set; }
+        public bool Availability { get; set; }
         public string Name { get; set;}
         public string Description { get; set;}
         public string Type { get; set;}

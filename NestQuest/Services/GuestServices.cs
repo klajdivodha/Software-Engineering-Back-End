@@ -227,7 +227,8 @@ namespace NestQuest.Services
                                  .Where(p => p.Type == dto.Type &&
                                              p.Max_Nr_Of_Guests >= dto.NrOfGuests &&
                                              p.City == dto.City &&
-                                             p.Country == dto.Country)
+                                             p.Country == dto.Country &&
+                                             p.Availability==true)
                                              .Select(p => new
                                              {
                                                  p.Name,
@@ -379,7 +380,7 @@ namespace NestQuest.Services
                 if (result != null) { return false; }
 
                 var rez = await _context.Properties
-                        .Where(p => p.Property_ID == dto.Property_Id && p.Max_Nr_Of_Guests >= dto.NrOfGuests)
+                        .Where(p => p.Property_ID == dto.Property_Id && p.Max_Nr_Of_Guests >= dto.NrOfGuests && p.Availability==true)
                         .FirstOrDefaultAsync();
                 if (rez == null) { return false; }
                 return true;
@@ -519,6 +520,7 @@ namespace NestQuest.Services
                 Reportings obj = new Reportings();
                 obj.Guest_Id = dto.Guest_Id;
                 obj.Property_Id = dto.Property_Id;
+                obj.BookingTime=dto.BookingTime;
                 obj.Start_Date = dto.Start_Date;
                 obj.Reporting_User_Type = dto.Reporting_User_Type;
                 obj.Status = dto.Status;

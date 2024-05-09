@@ -120,11 +120,11 @@ namespace NestQuest.Controllers
         }
 
         [HttpPatch("AppropeveGuestReporting")]
-        public async Task<IActionResult> AppropeveGuestReporting([FromBody] AppropeveGuestReportingDto dto)
+        public async Task<IActionResult> AppropeveGuestReporting([FromBody] ApproveReportingDto dto)
         {
             try
             {
-                var rezult = await _adminServices.AppropeveGuestReporting(dto);
+                var rezult = await _adminServices.ApproveGuestReporting(dto);
                 if(rezult == -1) { return NotFound(); }
                 if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok();
@@ -132,6 +132,35 @@ namespace NestQuest.Controllers
             catch(Exception ex)
             {
                 return BadRequest(ex.ToString());
+            }
+        }
+
+        [HttpPatch("AppropeveHostReporting")]
+        public async Task<IActionResult> AppropeveHostReporting([FromBody] AprvHostReportingDto dto)
+        {
+            try
+            {
+                var rezult = await _adminServices.AppropeHostReporting(dto);
+                if (rezult == -1) { return NotFound(); }
+                if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());
+            }
+        }
+
+        [HttpGet("GetRevenue")]
+        public async Task<IActionResult> GetRevenue()
+        {
+            try
+            {
+                return Ok(await _adminServices.GetRevenue());
+            }
+            catch(Exception ex)
+            {
+                return BadRequest();
             }
         }
     }

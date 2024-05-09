@@ -4,6 +4,7 @@ using NestQuest.Data.DTO.AdminDto;
 using NestQuest.Data.Models;
 using System.Net.Mail;
 using System.Net;
+using System.Linq;
 
 namespace NestQuest.Services
 {
@@ -16,7 +17,9 @@ namespace NestQuest.Services
         public Task<object[]> GetGuestReportings();
         public Task<object[]> GetHostReportings();
         public Task<int> DontAppropeveReporting(ReportingsDto dto);
-        public Task<int> AppropeveGuestReporting(AppropeveGuestReportingDto dto);
+        public Task<int> ApproveGuestReporting(ApproveReportingDto dto);
+        public Task<int> AppropeHostReporting(AprvHostReportingDto dto);
+        public Task<object[]> GetRevenue(); 
     }
     public class AdminServices : IAdminServices
     {
@@ -27,18 +30,42 @@ namespace NestQuest.Services
             _context = context;
         }
 
-        public async Task<int> AppropeveGuestReporting(AppropeveGuestReportingDto dto)
+        public async Task<int> ApproveGuestReporting(ApproveReportingDto dto)
         {
             try
             {
                 var rezult = await _context.Reportings
-                    .Where(r => r.Property_Id == dto.Property_id && r.Start_Date == dto.StarDate)
-                    .FirstOrDefaultAsync();
-                if( rezult== null ) { return -1; }
-                rezult.Status = "approved";
-                rezult.Fine = dto.Fine;
+                    .Where(r => r.Property_Id == dto.Property_id)
+                    .ToArrayAsync();
+                var rez=rezult.Where(r=>r.Start_Date==dto.StarDate).FirstOrDefault();
+                var count = rezult.Where(r => r.Status == "approved" && r.Reporting_User_Type == "guest").Count();
+                if ( rez== null ) { return -1; }
+                rez.Status = "approved";
+                rez.Fine = dto.Fine;
                 var NR = await _context.SaveChangesAsync();
-                await SideWorkApproveGuestReporting(rezult);
+                await SideWorkApproveGuestReporting(rez,count);
+                return NR;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> AppropeHostReporting(AprvHostReportingDto dto)
+        {
+            try
+            {
+                var rezult = await _context.Reportings
+                    .Where(r => r.Guest_Id==dto.GuestId)
+                    .ToArrayAsync();
+                var rez = rezult.Where(r => r.Start_Date == dto.StarDate && r.Property_Id==dto.Property_id).FirstOrDefault();
+                var count = rezult.Where(r => r.Status == "approved" && r.Reporting_User_Type == "host").Count();
+                if (rez == null) { return -1; }
+                rez.Status = "approved";
+                rez.Fine = dto.Fine;
+                var NR = await _context.SaveChangesAsync();
+                await SideWorkApproveHostReporting(rez, count);
                 return NR;
             }
             catch (Exception ex)
@@ -82,22 +109,42 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<int> SideWorkApproveGuestReporting(Reportings obj)
+        public async Task<int> SideWorkApproveHostReporting(Reportings obj, int count)
         {
             try
             {
-                var count=await _context.Reportings.Where(r=>r.Property_Id==obj.Property_Id && r.Status=="approved" && r.Reporting_User_Type=="guest").CountAsync();
-                if (count >= 3)
+                var guest=await _context.Users.Where(u=> u.User_Id==obj.Guest_Id).Select(u => new { u.Guest, u.Name, u.Email }).FirstOrDefaultAsync();
+                await SendEmail(guest.Email, $"Hello {guest.Name}! We would like to inform you that you have been fined {obj.Fine} €. Because of the following report: {obj.Description}", "Importat information!");
+                if (count >= 2)
                 {
-                    var hostId = await _context.Properties.Where(p => p.Property_ID == obj.Property_Id).FirstOrDefaultAsync();
+                    guest.Guest.banned = true;
+                    await _context.SaveChangesAsync();
+                    await SendEmail(guest.Email, $"Hello {guest.Name}! We would like to inform you that you have been banned from our app.", "Importat information!");
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> SideWorkApproveGuestReporting(Reportings obj, int count)
+        {
+            try
+            {
+                var hostId = await _context.Properties.Where(p => p.Property_ID == obj.Property_Id).FirstOrDefaultAsync();
+                var host = await _context.Users
+                       .Where(u => u.User_Id == hostId.Owner_ID)
+                       .Select(u => new { u.Host, u.Name, u.Email })
+                       .FirstOrDefaultAsync();
+                await SendEmail(host.Email, $"Hello {host.Name}! We would like to inform you that you have been fined {obj.Fine} €. Because of the following report: {obj.Description}", "Importat information!");
+                if (count >= 2)
+                {
                     hostId.Availability = false;
-                    var host = await _context.Users
-                        .Where(u => u.User_Id == hostId.Owner_ID)
-                        .Select(u => new { u.Host,u.Name, u.Email })
-                        .FirstOrDefaultAsync();
                     host.Host.banned = true;
                     await _context.SaveChangesAsync();
-                    await SendEmail(host.Email, $"Hello {host.Name}! We would like to informe you that you have been banned from our app.","Importat information!");
+                    await SendEmail(host.Email, $"Hello {host.Name}! We would like to inform you that you have been banned from our app.","Importat information!");
                 }
                 return 0;
             }
@@ -234,6 +281,26 @@ namespace NestQuest.Services
                         .ToArrayAsync();
                 if(rezult == null) { return[] ; }
                 return rezult;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object[]> GetRevenue()
+        {
+            try
+            {
+                var result = await _context.Bookings
+                    .Where(b=>b.Status=="done")
+                    .Select(b => new
+                {
+                    Date = b.End_Date.ToString("yyyy-mm-dd"),
+                    Amount=b.Amount*0.1
+                }).ToArrayAsync();
+                if(result == null) { return []; }
+                return result;
             }
             catch (Exception ex)
             {

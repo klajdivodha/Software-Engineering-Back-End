@@ -1,6 +1,6 @@
 ﻿namespace NestQuest.Data.DTO.AdminDto
 {
-    public class AppropeveGuestReportingDto
+    public class ApproveReportingDto
     {
         public int Property_id { get; set; }
         public DateTime StarDate { get; set; }

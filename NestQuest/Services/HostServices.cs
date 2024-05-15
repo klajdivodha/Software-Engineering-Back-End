@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NestQuest.Data;
 using NestQuest.Data.DTO;
 using NestQuest.Data.DTO.HostDTO;
 
@@ -11,7 +13,6 @@ namespace NestQuest.Services
 
         public Task<int> AddProperty(AddPropertyDto dto);
         public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto);
-        public Task<int> RemoveProperty(int propertyId);
 
         public Task<object[]> ViewBookings(int propertyId);
         public Task<ActionResult> BookingDetails(int bookingId);
@@ -36,6 +37,13 @@ namespace NestQuest.Services
     }
     public class HostServices : IHostServices
     {
+        private readonly DBContext _context;
+
+        public HostServices(DBContext context)
+        {
+            _context = context;
+        }
+
         public Task<object[]> ListHostProperties(int hostId)
         {
             return;
@@ -50,10 +58,6 @@ namespace NestQuest.Services
             return;
         }
         public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto)
-        {
-            return;
-        }
-        public Task<int> RemoveProperty(int propertyId)
         {
             return;
         }
@@ -98,13 +102,58 @@ namespace NestQuest.Services
         {
             return;
         }
-        public Task<int> ChangeEmail(int hostId, string newEmail)
+        public async Task<int> ChangeEmail(int hostId, string email)
         {
-            return;
+            try
+            {
+                var result = await _context.Users
+                            .Where(u => u.User_Id == hostId)
+                            .FirstOrDefaultAsync();
+
+                if (result == null) { return -1; }
+                var condition = await _context.Users.Where(e => e.Email == email).FirstOrDefaultAsync();
+                if (condition != null)
+                {
+                    return -2;
+                }
+                result.Email = email;
+                var nr = await _context.SaveChangesAsync();
+
+                GuestServices.SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
+                    "Email Change");
+
+                return nr;
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
-        public Task<int> ChangePassword(ChangePasswordDto dto)
+        public async Task<int> ChangePassword(ChangePasswordDto dto)
         {
-            return;
+            try
+            {
+                var rezult = await _context.Users
+                        .Where(u => u.User_Id == dto.Id)
+                        .FirstOrDefaultAsync();
+                if (rezult == null) { return -1; }
+                if (GuestServices.VerifyPassword(rezult.Password, dto.Password))
+                {
+                    rezult.Password = GuestServices.HashPassword(dto.NewPassword);
+
+                    var nr = _context.SaveChanges();
+                    return nr;
+                }
+                else
+                {
+                    return -2;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public Task<object[]> GetGuestDetailsByBooking(int bookingId)

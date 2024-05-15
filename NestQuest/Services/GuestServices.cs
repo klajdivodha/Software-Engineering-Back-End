@@ -58,7 +58,7 @@ namespace NestQuest.Services
             _context = context;
         }
 
-        public async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
+        public static async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
         {
             var fromAddress = new MailAddress("nestquest2@gmail.com", "Nest Quest");
             var toAddress = new MailAddress(toEmailAddress);
@@ -92,7 +92,7 @@ namespace NestQuest.Services
                 return false;
             }
         }
-        private bool VerifyPassword(string storedHash, string providedPassword)
+        public static bool VerifyPassword(string storedHash, string providedPassword)
         {
             // Split the stored hash to get the salt and the hash components
             var parts = storedHash.Split(':', 2);
@@ -115,7 +115,7 @@ namespace NestQuest.Services
             // Compare the hashes
             return storedSubkey == hashedProvidedPassword;
         }
-        private string HashPassword(string password)
+        public static string HashPassword(string password)
         {
             byte[] salt = new byte[128 / 8];
             using (var rng = RandomNumberGenerator.Create())

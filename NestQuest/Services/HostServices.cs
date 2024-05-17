@@ -2,17 +2,20 @@
 using Microsoft.EntityFrameworkCore;
 using NestQuest.Data;
 using NestQuest.Data.DTO;
+using NestQuest.Data.Models;
 using NestQuest.Data.DTO.HostDTO;
+using System.Net.Mail;
+using System.Net;
 
 namespace NestQuest.Services
 {
     public interface IHostServices
     {
         public Task<object[]> ListHostProperties(int hostId);
-        public Task<ActionResult> PropertyInfo(int propertyId);
-
-        public Task<int> AddProperty(AddPropertyDto dto);
-        public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto);
+       /* public Task<ActionResult> PropertyInfo(int propertyId);
+*/
+        public Task<int> AddProperty(Properties obj);
+        /*public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto);
 
         public Task<object[]> ViewBookings(int propertyId);
         public Task<ActionResult> BookingDetails(int bookingId);
@@ -26,14 +29,14 @@ namespace NestQuest.Services
         public Task<object[]> GetReports(int propertyId);
         public Task<int> ResolveReport(int reportId);
 
-        public Task<int> UpdateHostProfile(int hostId, UpdateHostProfileDto dto);
+        public Task<int> UpdateHostProfile(int hostId, UpdateHostProfileDto dto);*/
         public Task<int> ChangeEmail(int hostId, string newEmail);
         public Task<int> ChangePassword(ChangePasswordDto dto);
 
-        public Task<object[]> GetGuestDetailsByBooking(int bookingId);
+        /*public Task<object[]> GetGuestDetailsByBooking(int bookingId);
 
         public Task<int> SetPropertyAvailability(SetAvailabilityDto dto);
-        public Task<int> UpdateBookingAvailability(int propertyId, UpdateAvailabilityDto dto);
+        public Task<int> UpdateBookingAvailability(int propertyId, UpdateAvailabilityDto dto);*/
     }
     public class HostServices : IHostServices
     {
@@ -44,20 +47,79 @@ namespace NestQuest.Services
             _context = context;
         }
 
-        public Task<object[]> ListHostProperties(int hostId)
+        public static async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
         {
-            return;
-        }
-        public Task<ActionResult> PropertyInfo(int propertyId)
-        {
-            return;
+            var fromAddress = new MailAddress("nestquest2@gmail.com", "Nest Quest");
+            var toAddress = new MailAddress(toEmailAddress);
+            const string fromPassword = "rtbt zmpo lngl uajx";
+            string subject = Subject;
+            string body = content;
+
+            try
+            {
+                using (var smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                })
+                using (var message = new MailMessage(fromAddress, toAddress)
+                {
+                    Subject = subject,
+                    Body = body
+                })
+                {
+                    await smtp.SendMailAsync(message);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
-        public Task<int> AddProperty(AddPropertyDto dto)
+        public async Task<object[]> ListHostProperties(int hostId)
+        {
+            try
+            {
+                var properties = await _context.Properties
+                .Where(p => p.Owner_ID == hostId)
+                .ToArrayAsync();
+
+                if (properties.Any())
+                    return properties;
+                return [];
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            
+        }
+        /*public Task<ActionResult> PropertyInfo(int propertyId)
         {
             return;
+        }*/
+
+        public async Task<int> AddProperty(Properties obj)
+        {
+            try
+            {
+                await _context.Properties.AddAsync(obj);
+                var result = await _context.SaveChangesAsync();
+                return result;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
-        public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto)
+        /*public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto)
         {
             return;
         }
@@ -101,7 +163,7 @@ namespace NestQuest.Services
         public Task<int> UpdateHostProfile(int hostId, UpdateHostProfileDto dto)
         {
             return;
-        }
+        }*/
         public async Task<int> ChangeEmail(int hostId, string email)
         {
             try
@@ -119,7 +181,7 @@ namespace NestQuest.Services
                 result.Email = email;
                 var nr = await _context.SaveChangesAsync();
 
-                GuestServices.SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
+                SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
                     "Email Change");
 
                 return nr;
@@ -134,13 +196,13 @@ namespace NestQuest.Services
         {
             try
             {
-                var rezult = await _context.Users
+                var result = await _context.Users
                         .Where(u => u.User_Id == dto.Id)
                         .FirstOrDefaultAsync();
-                if (rezult == null) { return -1; }
-                if (GuestServices.VerifyPassword(rezult.Password, dto.Password))
+                if (result == null) { return -1; }
+                if (GuestServices.VerifyPassword(result.Password, dto.Password))
                 {
-                    rezult.Password = GuestServices.HashPassword(dto.NewPassword);
+                    result.Password = GuestServices.HashPassword(dto.NewPassword);
 
                     var nr = _context.SaveChanges();
                     return nr;
@@ -156,7 +218,7 @@ namespace NestQuest.Services
             }
         }
 
-        public Task<object[]> GetGuestDetailsByBooking(int bookingId)
+        /*public Task<object[]> GetGuestDetailsByBooking(int bookingId)
         {
             return;
         }
@@ -168,6 +230,6 @@ namespace NestQuest.Services
         public Task<int> UpdateBookingAvailability(int propertyId, UpdateAvailabilityDto dto)
         {
             return;
-        }
+        }*/
     }
 }

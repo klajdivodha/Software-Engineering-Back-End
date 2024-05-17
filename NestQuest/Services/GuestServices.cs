@@ -58,7 +58,7 @@ namespace NestQuest.Services
             _context = context;
         }
 
-        public static async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
+        public async Task<bool> SendEmail(string toEmailAddress, string content, string Subject)
         {
             var fromAddress = new MailAddress("nestquest2@gmail.com", "Nest Quest");
             var toAddress = new MailAddress(toEmailAddress);

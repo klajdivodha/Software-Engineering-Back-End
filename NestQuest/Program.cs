@@ -9,6 +9,7 @@ builder.Services.AddScoped<ISignUpServices, SignUpServices>();
 builder.Services.AddScoped<ILogInService, LogInService>();
 builder.Services.AddScoped<IGuestServices, GuestServices>();
 builder.Services.AddScoped<IAdminServices, AdminServices>();
+builder.Services.AddScoped<IHostServices, HostServices>();
 
 builder.Services.AddMemoryCache();
 

@@ -7,35 +7,42 @@ using NestQuest.Data.DTO.HostDTO;
 using System.Net.Mail;
 using System.Net;
 using System.Diagnostics.Metrics;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace NestQuest.Services
 {
     public interface IHostServices
     {
-        public Task<object[]> ListHostProperties(int hostId);
-        public Task<object> PropertyInfo(int propertyId);
-
+        public Task<int> ChangeEmail(int hostId, string newEmail);
+        public Task<int> ChangePassword(ChangePasswordDto dto);
         public Task<int> AddProperty(AddPropertyDto obj);
-        
+        public Task<object> PropertyInfo(int propertyId);
+        public Task<object[]> ListHostProperties(int hostId);
+        public Task<int> SetPropertyAvailability(SetAvailabilityDto dto);
+        public Task<int> ChangeNumberOfBeds(int propertyId, BedDto newBeds);
+        public Task<int> AddTypeOfBed(int propertyId, BedDto dto);
+        public Task<int> AddUtility(int propertyId, string utility);
+        public Task<int> DeleteUtility(int propertyId, string utility);
+        public Task<object[]> GetPropertyReviews(int propertyId);
 
         /*public Task<object[]> ViewBookings(int propertyId);
         public Task<ActionResult> BookingDetails(int bookingId);
-
+        ReportGuest
+        RateGuest
+        GetRevenue
+        add photos when adding a property and fix list all properties function
         public Task<bool> ConfirmBooking(int bookingId);
         public Task<bool> RejectBooking(int bookingId);
 
         public Task<object[]> GetPropertyReviews(int propertyId);
-        public Task<int> RespondToReview(int reviewId, string response);
 
         public Task<object[]> GetReports(int propertyId);
         public Task<int> ResolveReport(int reportId);*/
 
-        public Task<int> ChangeEmail(int hostId, string newEmail);
-        public Task<int> ChangePassword(ChangePasswordDto dto);
-
         //public Task<object[]> GetGuestDetailsByBooking(int bookingId);
 
-        public Task<int> SetPropertyAvailability(SetAvailabilityDto dto);
+
 
     }
     public class HostServices : IHostServices
@@ -82,38 +89,56 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<object[]> ListHostProperties(int hostId)
+        public async Task<int> ChangeEmail(int hostId, string email)
         {
             try
             {
-                var properties = await _context.Properties
-                .Where(p => p.Owner_ID == hostId)
-                .ToArrayAsync();
+                var result = await _context.Users
+                            .Where(u => u.User_Id == hostId)
+                            .FirstOrDefaultAsync();
 
-                if (properties.Any())
-                    return properties;
-                return [];
+                if (result == null) { return -1; }
+                var condition = await _context.Users.Where(e => e.Email == email).FirstOrDefaultAsync();
+                if (condition != null)
+                {
+                    return -2;
+                }
+                result.Email = email;
+                var nr = await _context.SaveChangesAsync();
+
+                SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
+                    "Email Change");
+
+                return nr;
+
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 throw;
             }
-            
         }
-
-        public async Task<object> PropertyInfo(int propertyId)
+        public async Task<int> ChangePassword(ChangePasswordDto dto)
         {
             try
             {
-                var property = await _context.Properties.Where(p => p.Property_ID == propertyId)
-                .FirstOrDefaultAsync();
-                if (property == null)
-                    return null;
-                return property;
-            }
-            catch (Exception)
-            {
+                var result = await _context.Users
+                        .Where(u => u.User_Id == dto.Id)
+                        .FirstOrDefaultAsync();
+                if (result == null) { return -1; }
+                if (GuestServices.VerifyPassword(result.Password, dto.Password))
+                {
+                    result.Password = GuestServices.HashPassword(dto.NewPassword);
 
+                    var nr = _context.SaveChanges();
+                    return nr;
+                }
+                else
+                {
+                    return -2;
+                }
+            }
+            catch (Exception ex)
+            {
                 throw;
             }
         }
@@ -187,105 +212,54 @@ namespace NestQuest.Services
                 throw;
             }
         }
-        public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto)
-        {
-            return;
-        }
 
-        /*public Task<object[]> ViewBookings(int propertyId)
-        {
-            return;
-        }*/
-        /*public Task<ActionResult> BookingDetails(int bookingId)
-        {
-            return;
-        }*/
-
-        /*public Task<bool> ConfirmBooking(int bookingId)
-        {
-            return;
-        }*/
-        /*public Task<bool> RejectBooking(int bookingId)
-        {
-            return;
-        }*/
-
-        /*public Task<object[]> GetPropertyReviews(int propertyId)
-        {
-            return;
-        }*/
-        /*public Task<int> RespondToReview(int reviewId, string response)
-        {
-            return;
-        }*/
-
-        /*public Task<object[]> GetReports(int propertyId)
-        {
-            return;
-        }*/
-        /*public Task<int> ResolveReport(int reportId)
-        {
-            return;
-        }*/
-
-        public async Task<int> ChangeEmail(int hostId, string email)
+        public async Task<object> PropertyInfo(int propertyId)
         {
             try
             {
-                var result = await _context.Users
-                            .Where(u => u.User_Id == hostId)
-                            .FirstOrDefaultAsync();
+                var property = await _context.Properties.Where(p => p.Property_ID == propertyId)
+                                                        .Include(p => p.Utilities)
+                                                        .Include(p => p.Beds)
+                                                        .Include(p => p.Reviews)
+                                                        .FirstOrDefaultAsync();
+                if (property == null)
+                    return null;
 
-                if (result == null) { return -1; }
-                var condition = await _context.Users.Where(e => e.Email == email).FirstOrDefaultAsync();
-                if (condition != null)
+                var options = new JsonSerializerOptions
                 {
-                    return -2;
-                }
-                result.Email = email;
-                var nr = await _context.SaveChangesAsync();
+                    ReferenceHandler = ReferenceHandler.Preserve
+                };
 
-                SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
-                    "Email Change");
+                var serializedResult = JsonSerializer.Serialize(property, options);
 
-                return nr;
-
+                return new JsonResult(serializedResult);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw;
-            }
-        }
-        public async Task<int> ChangePassword(ChangePasswordDto dto)
-        {
-            try
-            {
-                var result = await _context.Users
-                        .Where(u => u.User_Id == dto.Id)
-                        .FirstOrDefaultAsync();
-                if (result == null) { return -1; }
-                if (GuestServices.VerifyPassword(result.Password, dto.Password))
-                {
-                    result.Password = GuestServices.HashPassword(dto.NewPassword);
 
-                    var nr = _context.SaveChanges();
-                    return nr;
-                }
-                else
-                {
-                    return -2;
-                }
-            }
-            catch (Exception ex)
-            {
                 throw;
             }
         }
 
-        /*public Task<object[]> GetGuestDetailsByBooking(int bookingId)
+        public async Task<object[]> ListHostProperties(int hostId)
         {
-            return;
-        }*/
+            try
+            {
+                var properties = await _context.Properties
+                .Where(p => p.Owner_ID == hostId)
+                .ToArrayAsync();
+
+                if (properties.Any())
+                    return properties;
+                return [];
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+        }
+
 
         public async Task<int> SetPropertyAvailability(SetAvailabilityDto dto)
         {
@@ -297,6 +271,123 @@ namespace NestQuest.Services
             var nr = _context.SaveChanges();
 
             return nr;
+        }
+
+        public async Task<int> ChangeNumberOfBeds(int propertyId, BedDto newBeds)
+        {
+            try
+            {
+                var beds = await _context.Beds.Where(p => p.Property_ID == propertyId && p.Type == newBeds.Type)
+                                                  .FirstOrDefaultAsync();
+                if (beds == null) { return -1; }
+
+                beds.Number = newBeds.Number;
+                var nr = _context.SaveChanges();
+                return nr;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<int> AddTypeOfBed(int propertyId, BedDto dto)
+        {
+            try
+            {
+                if (await CheckBedTypeExists(propertyId, dto.Type))
+                { return -1; }
+
+                Beds newBed = new Beds();
+                newBed.Number = dto.Number;
+                newBed.Type = dto.Type;
+                newBed.Property_ID = propertyId;
+
+                await _context.Beds.AddAsync(newBed);
+                await _context.SaveChangesAsync();
+                return newBed.Property_ID;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+        }
+
+        public async Task<bool> CheckBedTypeExists(int propertyId, string bedType)
+        {
+            return await _context.Beds.AnyAsync(b => b.Property_ID == propertyId && b.Type == bedType);
+        }
+
+        public async Task<int> AddUtility(int propertyId, string utility)
+        {
+            try
+            {
+                if (await CheckUtilityExists(propertyId, utility))
+                { return -1; }
+
+                Utilities newUtility = new Utilities();
+                newUtility.Utilitie = utility; 
+                newUtility.Property_ID = propertyId;
+
+                await _context.Utilities.AddAsync(newUtility);
+                await _context.SaveChangesAsync();
+                return newUtility.Property_ID;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<int> DeleteUtility(int propertyId, string utility)
+        {
+            try
+            {
+                var utilityObject = await _context.Utilities
+                                                  .FirstOrDefaultAsync(u => u.Property_ID == propertyId && u.Utilitie == utility);
+
+                if (utilityObject == null)
+                {
+                    return -1;
+                }
+
+                _context.Utilities.Remove(utilityObject);
+                await _context.SaveChangesAsync();
+
+                return 1;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<bool> CheckUtilityExists(int propertyId, string utility)
+        {
+            return await _context.Utilities.AnyAsync(u => u.Property_ID == propertyId && u.Utilitie == utility);
+        }
+
+        public async Task<object[]> GetPropertyReviews(int propertyId)
+        {
+            try
+            {
+                var reviews = await _context.Reviews.Where(p => p.Property_ID == propertyId)
+                .ToArrayAsync();
+                if (reviews.Any())
+                    return reviews;
+
+                return [];
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
     }
 }

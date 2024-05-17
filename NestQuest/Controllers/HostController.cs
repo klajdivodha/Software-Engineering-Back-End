@@ -114,10 +114,110 @@ namespace NestQuest.Controllers
             try
             {
                 var result = await _hostServices.SetPropertyAvailability(dto);
+                if (result == -1) return NotFound();
                 return Ok(result);
             }
             catch (Exception)
             {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("ChangeNumberOfBeds")]
+        public async Task<IActionResult> ChangeNumberOfBeds(string propertyId, BedDto dto)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.ChangeNumberOfBeds(ID, dto);
+
+                if(result == -1) return NotFound();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPost("AddTypeOfBed/{propertyId}")]
+        public async Task<IActionResult> AddTypeOfBed(string propertyId, BedDto dto)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.AddTypeOfBed(ID, dto);
+
+                if (result == -1) return Conflict();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPost("AddUtility/{propertyId}/{utility}")]
+        public async Task<IActionResult> AddUtility(string propertyId, string utility)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.AddUtility(ID, utility);
+
+                if (result == -1) return Conflict();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpDelete("DeleteUtility/{propertyId}/{utility}")]
+        public async Task<IActionResult> DeleteUtility(string propertyId, string utility)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.DeleteUtility(ID, utility);
+
+                if (result == -1) return Conflict();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("ListReviews/{propertyId}")]
+        public async Task<IActionResult> GetReviews(string propertyId)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.GetPropertyReviews(ID);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+
                 return BadRequest();
             }
         }

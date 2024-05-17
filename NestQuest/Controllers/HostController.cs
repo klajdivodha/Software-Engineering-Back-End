@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using NestQuest.Data.DTO;
+using NestQuest.Data.DTO.HostDTO;
 using NestQuest.Data.Models;
 using NestQuest.Services;
 
@@ -55,12 +57,12 @@ namespace NestQuest.Controllers
         }
 
         [HttpPost("AddProperty")]
-        public async Task<IActionResult> AddProperty([FromBody] Properties obj)
+        public async Task<IActionResult> AddProperty([FromBody] AddPropertyDto obj)
         {
             try
             {
                 var result = await _hostServices.AddProperty(obj);
-                if (result == 0) { return StatusCode(500, "Internal Server Error"); }
+                if (result <= 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok(result);
             }
             catch (Exception ex)
@@ -69,12 +71,12 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpGet("ListProperties/{id}")]
-        public async Task<IActionResult> ListHostProperties(string id)
+        [HttpGet("ListProperties/{hostId}")]
+        public async Task<IActionResult> ListHostProperties(string hostId)
         {
             try
             {
-                if (!int.TryParse(id, out int ID))
+                if (!int.TryParse(hostId, out int ID))
                 {
                     return BadRequest("Invalid ID format. ID must be an integer.");
                 }
@@ -84,6 +86,38 @@ namespace NestQuest.Controllers
             catch (Exception)
             {
 
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetProperty/{propertyId}")]
+        public async Task<IActionResult> GetProperty(string propertyId)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.PropertyInfo(ID);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("ChangeAvailability")]
+        public async Task<IActionResult> SetAvailability(SetAvailabilityDto dto)
+        {
+            try
+            {
+                var result = await _hostServices.SetPropertyAvailability(dto);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
                 return BadRequest();
             }
         }

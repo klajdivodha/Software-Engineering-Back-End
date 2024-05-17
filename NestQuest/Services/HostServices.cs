@@ -6,18 +6,19 @@ using NestQuest.Data.Models;
 using NestQuest.Data.DTO.HostDTO;
 using System.Net.Mail;
 using System.Net;
+using System.Diagnostics.Metrics;
 
 namespace NestQuest.Services
 {
     public interface IHostServices
     {
         public Task<object[]> ListHostProperties(int hostId);
-       /* public Task<ActionResult> PropertyInfo(int propertyId);
-*/
-        public Task<int> AddProperty(Properties obj);
-        /*public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto);
+        public Task<object> PropertyInfo(int propertyId);
 
-        public Task<object[]> ViewBookings(int propertyId);
+        public Task<int> AddProperty(AddPropertyDto obj);
+        
+
+        /*public Task<object[]> ViewBookings(int propertyId);
         public Task<ActionResult> BookingDetails(int bookingId);
 
         public Task<bool> ConfirmBooking(int bookingId);
@@ -27,16 +28,15 @@ namespace NestQuest.Services
         public Task<int> RespondToReview(int reviewId, string response);
 
         public Task<object[]> GetReports(int propertyId);
-        public Task<int> ResolveReport(int reportId);
+        public Task<int> ResolveReport(int reportId);*/
 
-        public Task<int> UpdateHostProfile(int hostId, UpdateHostProfileDto dto);*/
         public Task<int> ChangeEmail(int hostId, string newEmail);
         public Task<int> ChangePassword(ChangePasswordDto dto);
 
-        /*public Task<object[]> GetGuestDetailsByBooking(int bookingId);
+        //public Task<object[]> GetGuestDetailsByBooking(int bookingId);
 
         public Task<int> SetPropertyAvailability(SetAvailabilityDto dto);
-        public Task<int> UpdateBookingAvailability(int propertyId, UpdateAvailabilityDto dto);*/
+
     }
     public class HostServices : IHostServices
     {
@@ -100,18 +100,16 @@ namespace NestQuest.Services
             }
             
         }
-        /*public Task<ActionResult> PropertyInfo(int propertyId)
-        {
-            return;
-        }*/
 
-        public async Task<int> AddProperty(Properties obj)
+        public async Task<object> PropertyInfo(int propertyId)
         {
             try
             {
-                await _context.Properties.AddAsync(obj);
-                var result = await _context.SaveChangesAsync();
-                return result;
+                var property = await _context.Properties.Where(p => p.Property_ID == propertyId)
+                .FirstOrDefaultAsync();
+                if (property == null)
+                    return null;
+                return property;
             }
             catch (Exception)
             {
@@ -119,51 +117,117 @@ namespace NestQuest.Services
                 throw;
             }
         }
-        /*public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto)
+
+        public async Task<int> AddProperty(AddPropertyDto propertyDto)
+        {
+            try
+            {
+                var property = new Properties
+                {
+                    Owner_ID = propertyDto.Owner_ID,
+                    Availability = true,
+                    Name = propertyDto.Name,
+                    Description = propertyDto.Description,
+                    Type = propertyDto.Type,
+                    Address = propertyDto.Address,
+                    City = propertyDto.City,
+                    Country = propertyDto.Country,
+                    Daily_Price = propertyDto.Daily_Price,
+                    Latitude = propertyDto.Latitude,
+                    Longitude = propertyDto.Longitude,
+                    Preium_Fee_Start = null,
+                    Nr_Rooms = propertyDto.Nr_Rooms,
+                    Max_Nr_Of_Guests = propertyDto.Max_Nr_Of_Guests,
+                    Pets = propertyDto.Pets,
+                    Nr_Of_Baths = propertyDto.Nr_Of_Baths,
+                    Nr_Of_Bookings = 0,
+                    Checkin_Time = propertyDto.Checkin_Time,
+                    Checkout_Time = propertyDto.Checkout_Time,
+                    Parties = propertyDto.Parties,
+                    Smoking = propertyDto.Smoking,
+                    Nr_Of_Parking_Spots = propertyDto.Nr_Of_Parking_Spots,
+                    Cleanliness_Rating = 5,
+                    Accuracy_Rating = 5,
+                    Checkin_Rating = 5,
+                    Communication_Rating = 5,
+                    Location_Rating = 5,
+                    Price_Rating = 5,
+                    Overall_Rating = 5,
+                    Nr_Of_Ratings = 1,
+
+                    Beds = new List<Beds>(),
+                    Utilities = new List<Utilities>()
+                };
+
+                foreach (var bedDto in propertyDto.Beds)
+                {
+                    property.Beds.Add(new Beds
+                    {
+                        Type = bedDto.Type,
+                        Number = bedDto.Number,
+                    });
+
+                }
+
+                foreach (var utilityDto in propertyDto.Utilities)
+                {
+                    property.Utilities.Add(new Utilities
+                    {
+                        Utilitie = utilityDto.Utilitie,
+                    });
+                }
+
+                await _context.Properties.AddAsync(property);
+                await _context.SaveChangesAsync();
+                return property.Property_ID;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+        public Task<int> UpdateProperty(int propertyId, UpdatePropertyDto dto)
         {
             return;
         }
 
-        public Task<object[]> ViewBookings(int propertyId)
-        {
-            return;
-        }
-        public Task<ActionResult> BookingDetails(int bookingId)
-        {
-            return;
-        }
-
-        public Task<bool> ConfirmBooking(int bookingId)
-        {
-            return;
-        }
-        public Task<bool> RejectBooking(int bookingId)
-        {
-            return;
-        }
-
-        public Task<object[]> GetPropertyReviews(int propertyId)
-        {
-            return;
-        }
-        public Task<int> RespondToReview(int reviewId, string response)
-        {
-            return;
-        }
-
-        public Task<object[]> GetReports(int propertyId)
-        {
-            return;
-        }
-        public Task<int> ResolveReport(int reportId)
-        {
-            return;
-        }
-
-        public Task<int> UpdateHostProfile(int hostId, UpdateHostProfileDto dto)
+        /*public Task<object[]> ViewBookings(int propertyId)
         {
             return;
         }*/
+        /*public Task<ActionResult> BookingDetails(int bookingId)
+        {
+            return;
+        }*/
+
+        /*public Task<bool> ConfirmBooking(int bookingId)
+        {
+            return;
+        }*/
+        /*public Task<bool> RejectBooking(int bookingId)
+        {
+            return;
+        }*/
+
+        /*public Task<object[]> GetPropertyReviews(int propertyId)
+        {
+            return;
+        }*/
+        /*public Task<int> RespondToReview(int reviewId, string response)
+        {
+            return;
+        }*/
+
+        /*public Task<object[]> GetReports(int propertyId)
+        {
+            return;
+        }*/
+        /*public Task<int> ResolveReport(int reportId)
+        {
+            return;
+        }*/
+
         public async Task<int> ChangeEmail(int hostId, string email)
         {
             try
@@ -221,15 +285,18 @@ namespace NestQuest.Services
         /*public Task<object[]> GetGuestDetailsByBooking(int bookingId)
         {
             return;
-        }
-
-        public Task<int> SetPropertyAvailability(SetAvailabilityDto dto)
-        {
-            return;
-        }
-        public Task<int> UpdateBookingAvailability(int propertyId, UpdateAvailabilityDto dto)
-        {
-            return;
         }*/
+
+        public async Task<int> SetPropertyAvailability(SetAvailabilityDto dto)
+        {
+            var result = await _context.Properties.Where(p => p.Property_ID == dto.Property_ID)
+                                                  .FirstOrDefaultAsync();
+            if (result == null) { return -1; }
+
+            result.Availability = dto.Availability;
+            var nr = _context.SaveChanges();
+
+            return nr;
+        }
     }
 }

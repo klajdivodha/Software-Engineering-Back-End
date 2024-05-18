@@ -26,16 +26,15 @@ namespace NestQuest.Services
         public Task<int> AddUtility(int propertyId, string utility);
         public Task<int> DeleteUtility(int propertyId, string utility);
         public Task<object[]> GetPropertyReviews(int propertyId);
-        public Task<bool> ConfirmBooking(BookingDto dto);
+        //public Task<bool> ConfirmBooking(BookingDto dto);
         public Task<bool> RejectBooking(BookingDto dto);
+        public Task<object[]> ViewBookings(int propertyId);
+        public Task<object[]> ReportGuest(int guestId, BookingDto dto);
+        //RateGuest
+        //GetRevenue
+        //add photos when adding a property and fix list all properties function
 
-        /*public Task<object[]> ViewBookings(int propertyId);
-        ReportGuest
-        RateGuest
-        GetRevenue
-        add photos when adding a property and fix list all properties function
-
-        //public Task<object[]> GetGuestDetailsByBooking(int bookingId);*/
+        //public Task<object[]> GetGuestDetailsByBooking(int bookingId);
 
 
 
@@ -385,7 +384,7 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<bool> ConfirmBooking(BookingDto dto)
+        /*public async Task<bool> ConfirmBooking(BookingDto dto)
         {
             try
             {
@@ -404,7 +403,7 @@ namespace NestQuest.Services
 
                 throw;
             }
-        }
+        }*/
 
         public async Task<bool> RejectBooking(BookingDto dto)
         {
@@ -424,6 +423,26 @@ namespace NestQuest.Services
             {
 
                 throw;
+            }
+        }
+
+        public async Task<object[]> ViewBookings(int propertyId)
+        {
+            var booking = await _context.Bookings
+                                        .Where(u => u.Property_Id == propertyId).ToArrayAsync();
+
+            return booking;
+        }
+
+        public async Task<object[]> ReportGuest(int guestId, BookingDto dto)
+        {
+            var report = new Reportings()
+            {
+                Property_Id = dto.Property_Id,
+                Start_Date = dto.StartDate,
+                BookingTime = dto.BookingTime,
+                Guest_Id = guestId,
+                Reporting_User_Type = "host",
             }
         }
     }

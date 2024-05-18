@@ -222,7 +222,7 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpPatch("ConfirmBooking")]
+        /*[HttpPatch("ConfirmBooking")]
         public async Task<IActionResult> ConfirmBooking(BookingDto dto)
         {
             try
@@ -235,7 +235,7 @@ namespace NestQuest.Controllers
             {
                 return BadRequest();
             }
-        }
+        }*/
 
         [HttpPatch("RejectBooking")]
         public async Task<IActionResult> RejectBooking(BookingDto dto)
@@ -248,6 +248,26 @@ namespace NestQuest.Controllers
             }
             catch (Exception)
             {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetBookings/{propertyId}")]
+        public async Task<IActionResult> GetBookings(string propertyId)
+        {
+            try
+            {
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                var result = await _hostServices.ViewBookings(ID);
+                if(result == null) return NotFound();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+
                 return BadRequest();
             }
         }

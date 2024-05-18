@@ -272,5 +272,63 @@ namespace NestQuest.Controllers
             }
         }
 
+        [HttpPost("AddReporting")]
+        public async Task<IActionResult> AddReporting([FromForm] AddReportingsDto dto)
+        {
+            try
+            {
+                var result = await _hostServices.ReportGuest(dto);
+                if (result == 0) { return StatusCode(500, "Internal Server Error"); }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());
+            }
+        }
+
+        [HttpPatch("AddGuestRating/{id}/{rating}")]
+        public async Task<IActionResult> AddHostRating(string id, string rating)
+        {
+            try
+            {
+                var result = await _hostServices.RateGuest(int.Parse(id), int.Parse(rating));
+                if (result == null) { return StatusCode(500, "Internal Server Error"); }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetRevenue")]
+        public async Task<IActionResult> GetRevenue()
+        {
+            try
+            {
+                return Ok(await _hostServices.GetRevenue());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetGuest")]
+        public async Task<IActionResult> GetGuest(BookingDto dto)
+        {
+            try
+            {
+                var result = await _hostServices.GetGuestDetailsByBooking(dto);
+                if (result == null) { return NotFound(); };
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
     }
 }

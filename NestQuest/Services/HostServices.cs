@@ -29,12 +29,12 @@ namespace NestQuest.Services
         //public Task<bool> ConfirmBooking(BookingDto dto);
         public Task<bool> RejectBooking(BookingDto dto);
         public Task<object[]> ViewBookings(int propertyId);
-        public Task<object[]> ReportGuest(int guestId, BookingDto dto);
-        //RateGuest
-        //GetRevenue
+        public Task<int> ReportGuest(AddReportingsDto dto);
+        public Task<object> RateGuest(int hostId, double rating);
+        public Task<object[]> GetRevenue();
         //add photos when adding a property and fix list all properties function
 
-        //public Task<object[]> GetGuestDetailsByBooking(int bookingId);
+        public Task<object> GetGuestDetailsByBooking(BookingDto dto);
 
 
 
@@ -434,15 +434,121 @@ namespace NestQuest.Services
             return booking;
         }
 
-        public async Task<object[]> ReportGuest(int guestId, BookingDto dto)
+        public async Task<int> ReportGuest(AddReportingsDto dto)
         {
-            var report = new Reportings()
+            try
             {
-                Property_Id = dto.Property_Id,
-                Start_Date = dto.StartDate,
-                BookingTime = dto.BookingTime,
-                Guest_Id = guestId,
-                Reporting_User_Type = "host",
+                var report = new Reportings()
+                {
+                    Property_Id = dto.Property_Id,
+                    Start_Date = dto.Start_Date,
+                    BookingTime = dto.BookingTime,
+                    Guest_Id = dto.Guest_Id,
+                    Reporting_User_Type = "host",
+                    Status = "pending",
+                    Fine = null,
+                    Description = dto.Description
+                };
+
+                await _context.Reportings.AddAsync(report);
+
+                string photosDirectoryPath = @"C:\Users\User\Desktop\photos\reportings";
+
+                string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+
+                if (!Directory.Exists(photosDirectoryPath))
+                {
+                    Directory.CreateDirectory(photosDirectoryPath);
+                }
+
+                string filePath = Path.Combine(photosDirectoryPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.photo.CopyToAsync(stream);
+                }
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<object> RateGuest(int hostId, double rating)
+        {
+            try
+            {
+                var result = await _context.Host.Where(h => h.Host_Id == hostId).FirstOrDefaultAsync();
+
+                if (result == null) { return null; }
+                result.rating += rating;
+                result.Nr_Of_Ratings += 1;
+                var nr = await _context.SaveChangesAsync();
+                if (nr == 0)
+                {
+                    return null;
+                }
+                return new { result.rating, result.Nr_Of_Ratings };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object[]> GetRevenue()
+        {
+            try
+            {
+                var result = await _context.Bookings
+                    .Where(b => b.Status == "done")
+                    .Select(b => new
+                    {
+                        Date = b.End_Date.ToString("yyyy-mm-dd"),
+                        Amount = b.Amount * 0.9
+                    }).ToArrayAsync();
+                if (result == null) { return []; }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetGuestDetailsByBooking(BookingDto dto)
+        {
+            try
+            {
+                var booking = await _context.Bookings.Where(b => b.Property_Id == dto.Property_Id
+                                                        && b.Start_Date == dto.StartDate
+                                                        && b.BookingTime == dto.BookingTime)
+                                                        .FirstOrDefaultAsync();
+                int GuestId = booking.Guest_Id;
+                if(booking == null) { return null; }
+
+                var guest = _context.Users.Where(g => g.User_Id == GuestId)
+                                          .Select(g => new
+                                          {
+                                              g.Name,
+                                              g.Surname,
+                                              g.Email,
+                                              g.Phone,
+                                              g.Birthday,
+                                              g.UserType,
+                                              g.Nationality,
+                                              g.Guest
+                                          }).FirstOrDefaultAsync();
+                if(guest == null) { return null; }
+
+                return guest;
+            }
+            catch (Exception)
+            {
+
+                throw;
             }
         }
     }

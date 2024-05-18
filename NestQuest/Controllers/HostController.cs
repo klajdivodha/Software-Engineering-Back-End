@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using NestQuest.Data.DTO;
 using NestQuest.Data.DTO.HostDTO;
 using NestQuest.Data.Models;
 using NestQuest.Services;
+using System.Globalization;
 
 namespace NestQuest.Controllers
 {
@@ -288,7 +290,7 @@ namespace NestQuest.Controllers
         }
 
         [HttpPatch("AddGuestRating/{id}/{rating}")]
-        public async Task<IActionResult> AddHostRating(string id, string rating)
+        public async Task<IActionResult> AddGuestRating(string id, string rating)
         {
             try
             {
@@ -315,12 +317,30 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpGet("GetGuest")]
-        public async Task<IActionResult> GetGuest(BookingDto dto)
+        [HttpGet("GetGuest/{startDate}/{bookingTime}/{propertyId}")]
+        public async Task<IActionResult> GetGuest(string startDate, string bookingTime, string propertyId)
         {
             try
             {
-                var result = await _hostServices.GetGuestDetailsByBooking(dto);
+                if (!int.TryParse(propertyId, out int ID))
+                {
+                    return BadRequest("Invalid ID format. ID must be an integer.");
+                }
+                DateTime date;
+
+                bool success = DateTime.TryParseExact(startDate, "yyyy-MM-dd HH:mm:ss.ffffff", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+
+                if (success)
+                {
+                    Console.WriteLine(date);
+                }
+                else
+                {
+                    Console.WriteLine("Failed to parse the date string.");
+                }
+                DateTime StartDate = DateTime.Parse(startDate);
+                DateTime BookingTime = DateTime.Parse(bookingTime);
+                var result = await _hostServices.GetGuestDetailsByBooking(StartDate, BookingTime, ID);
                 if (result == null) { return NotFound(); };
                 return Ok(result);
             }

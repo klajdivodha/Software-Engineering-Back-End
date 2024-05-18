@@ -34,7 +34,7 @@ namespace NestQuest.Services
         public Task<object[]> GetRevenue();
         //add photos when adding a property and fix list all properties function
 
-        public Task<object> GetGuestDetailsByBooking(BookingDto dto);
+        public Task<object> GetGuestDetailsByBooking(DateTime startDate, DateTime bookingTime, int propertyId);
 
 
 
@@ -198,6 +198,25 @@ namespace NestQuest.Services
 
                 await _context.Properties.AddAsync(property);
                 await _context.SaveChangesAsync();
+
+                /*string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\properties";
+
+                string fileName = $"{property.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+
+                if (!Directory.Exists(photosDirectoryPath))
+                {
+                    Directory.CreateDirectory(photosDirectoryPath);
+                }
+
+                string filePath = Path.Combine(photosDirectoryPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.photo.CopyToAsync(stream);
+                }
+                return await _context.SaveChangesAsync();*/
+
+
                 return property.Property_ID;
             }
             catch (Exception)
@@ -452,7 +471,7 @@ namespace NestQuest.Services
 
                 await _context.Reportings.AddAsync(report);
 
-                string photosDirectoryPath = @"C:\Users\User\Desktop\photos\reportings";
+                string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\reportings";
 
                 string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
 
@@ -476,11 +495,11 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<object> RateGuest(int hostId, double rating)
+        public async Task<object> RateGuest(int guestId, double rating)
         {
             try
             {
-                var result = await _context.Host.Where(h => h.Host_Id == hostId).FirstOrDefaultAsync();
+                var result = await _context.Guest.Where(h => h.Guest_Id == guestId).FirstOrDefaultAsync();
 
                 if (result == null) { return null; }
                 result.rating += rating;
@@ -518,18 +537,18 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<object> GetGuestDetailsByBooking(BookingDto dto)
+        public async Task<object> GetGuestDetailsByBooking(DateTime startDate, DateTime bookingTime, int propertyId)
         {
             try
             {
-                var booking = await _context.Bookings.Where(b => b.Property_Id == dto.Property_Id
-                                                        && b.Start_Date == dto.StartDate
-                                                        && b.BookingTime == dto.BookingTime)
+                var booking = await _context.Bookings.Where(b => b.Property_Id == propertyId
+                                                        && b.Start_Date == startDate
+                                                        && b.BookingTime == bookingTime)
                                                         .FirstOrDefaultAsync();
+                if (booking == null) { return null; }
                 int GuestId = booking.Guest_Id;
-                if(booking == null) { return null; }
 
-                var guest = _context.Users.Where(g => g.User_Id == GuestId)
+                var guest = await _context.Users.Where(g => g.User_Id == GuestId)
                                           .Select(g => new
                                           {
                                               g.Name,

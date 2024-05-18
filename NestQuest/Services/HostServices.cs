@@ -9,6 +9,7 @@ using System.Net;
 using System.Diagnostics.Metrics;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace NestQuest.Services
 {
@@ -25,22 +26,16 @@ namespace NestQuest.Services
         public Task<int> AddUtility(int propertyId, string utility);
         public Task<int> DeleteUtility(int propertyId, string utility);
         public Task<object[]> GetPropertyReviews(int propertyId);
+        public Task<bool> ConfirmBooking(BookingDto dto);
+        public Task<bool> RejectBooking(BookingDto dto);
 
         /*public Task<object[]> ViewBookings(int propertyId);
-        public Task<ActionResult> BookingDetails(int bookingId);
         ReportGuest
         RateGuest
         GetRevenue
         add photos when adding a property and fix list all properties function
-        public Task<bool> ConfirmBooking(int bookingId);
-        public Task<bool> RejectBooking(int bookingId);
 
-        public Task<object[]> GetPropertyReviews(int propertyId);
-
-        public Task<object[]> GetReports(int propertyId);
-        public Task<int> ResolveReport(int reportId);*/
-
-        //public Task<object[]> GetGuestDetailsByBooking(int bookingId);
+        //public Task<object[]> GetGuestDetailsByBooking(int bookingId);*/
 
 
 
@@ -382,6 +377,48 @@ namespace NestQuest.Services
                     return reviews;
 
                 return [];
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<bool> ConfirmBooking(BookingDto dto)
+        {
+            try
+            {
+                var booking = await _context.Bookings
+                                            .FirstOrDefaultAsync(u => u.BookingTime == dto.BookingTime
+                                                                 && u.Property_Id == dto.Property_Id
+                                                                 && u.Start_Date == dto.StartDate);
+                if (booking == null) return false;
+                booking.Status = "accepted";
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<bool> RejectBooking(BookingDto dto)
+        {
+            try
+            {
+                var booking = await _context.Bookings
+                                            .FirstOrDefaultAsync(u => u.BookingTime == dto.BookingTime
+                                                                 && u.Property_Id == dto.Property_Id
+                                                                 && u.Start_Date == dto.StartDate);
+                if (booking == null || booking.Status != "upcoming") return false;
+                booking.Status = "rejected";
+                await _context.SaveChangesAsync();
+
+                return true;
             }
             catch (Exception)
             {

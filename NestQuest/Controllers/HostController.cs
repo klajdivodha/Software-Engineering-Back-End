@@ -222,5 +222,35 @@ namespace NestQuest.Controllers
             }
         }
 
+        [HttpPatch("ConfirmBooking")]
+        public async Task<IActionResult> ConfirmBooking(BookingDto dto)
+        {
+            try
+            {
+                var result = await _hostServices.ConfirmBooking(dto);
+                if (result == false) return NotFound();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPatch("RejectBooking")]
+        public async Task<IActionResult> RejectBooking(BookingDto dto)
+        {
+            try
+            {
+                var result = await _hostServices.RejectBooking(dto);
+                if (result == false) return NotFound();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
     }
 }

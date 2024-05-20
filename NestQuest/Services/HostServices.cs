@@ -200,7 +200,7 @@ namespace NestQuest.Services
                 await _context.Properties.AddAsync(property);
                 await _context.SaveChangesAsync();
 
-                string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\properties";
+                string photosDirectoryPath = @"C:\Users\user\Desktop\photos\properties";
 
                 if (!Directory.Exists(photosDirectoryPath))
                 {
@@ -483,7 +483,7 @@ namespace NestQuest.Services
 
                 await _context.Reportings.AddAsync(report);
 
-                string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\reportings";
+                string photosDirectoryPath = @"C:\Users\user\Desktop\photos\reportings";
 
                 string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-MM-dd")}.jpg";
 

@@ -206,7 +206,6 @@ namespace NestQuest.Services
                 {
                     Directory.CreateDirectory(photosDirectoryPath);
                 }
-                propertyDto.Images = new List<IFormFile>();
 
                 int i = 0;
 
@@ -219,10 +218,11 @@ namespace NestQuest.Services
                     {
                         await imageDto.CopyToAsync(stream);
                     }
+                    await _context.SaveChangesAsync();
                     i++;
                 }
 
-                return await _context.SaveChangesAsync();
+                return property.Property_ID;
             }
             catch (Exception)
             {

@@ -59,12 +59,12 @@ namespace NestQuest.Controllers
         }
 
         [HttpPost("AddProperty")]
-        public async Task<IActionResult> AddProperty([FromBody] AddPropertyDto obj)
+        public async Task<IActionResult> AddProperty([FromForm] AddPropertyDto obj)
         {
             try
             {
                 var result = await _hostServices.AddProperty(obj);
-                if (result <= 0) { return StatusCode(500, "Internal Server Error"); }
+                if (result == 0) { return NotFound(); }
                 return Ok(result);
             }
             catch (Exception ex)

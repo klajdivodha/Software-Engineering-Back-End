@@ -531,7 +531,7 @@ namespace NestQuest.Services
 
                 string photosDirectoryPath = @"C:\Users\User\Desktop\photos\reportings";
 
-                string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+                string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-MM-dd")}.jpg";
 
                 if (!Directory.Exists(photosDirectoryPath))
                 {

@@ -10,6 +10,7 @@ using System.Diagnostics.Metrics;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace NestQuest.Services
 {
@@ -100,7 +101,7 @@ namespace NestQuest.Services
                 result.Email = email;
                 var nr = await _context.SaveChangesAsync();
 
-                SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
+                await SendEmail(email, $"{result.Name} your email address has been changed this is your new email address that will be used in our app.",
                     "Email Change");
 
                 return nr;
@@ -176,7 +177,7 @@ namespace NestQuest.Services
 
                     Beds = new List<Beds>(),
                     Utilities = new List<Utilities>()
-                };
+              };
 
                 foreach (var bedDto in propertyDto.Beds)
                 {
@@ -199,25 +200,29 @@ namespace NestQuest.Services
                 await _context.Properties.AddAsync(property);
                 await _context.SaveChangesAsync();
 
-                /*string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\properties";
-
-                string fileName = $"{property.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+                string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\properties";
 
                 if (!Directory.Exists(photosDirectoryPath))
                 {
                     Directory.CreateDirectory(photosDirectoryPath);
                 }
+                propertyDto.Images = new List<IFormFile>();
 
-                string filePath = Path.Combine(photosDirectoryPath, fileName);
+                int i = 0;
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                foreach (var imageDto in propertyDto.Images)
                 {
-                    await dto.photo.CopyToAsync(stream);
+                    string fileName = $"{property.Property_ID}{i}.jpg";
+                    string filePath = Path.Combine(photosDirectoryPath, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageDto.CopyToAsync(stream);
+                    }
+                    i++;
                 }
-                return await _context.SaveChangesAsync();*/
 
-
-                return property.Property_ID;
+                return await _context.SaveChangesAsync();
             }
             catch (Exception)
             {
@@ -433,8 +438,15 @@ namespace NestQuest.Services
                                                                  && u.Property_Id == dto.Property_Id
                                                                  && u.Start_Date == dto.StartDate);
                 if (booking == null || booking.Status != "upcoming") return false;
-                booking.Status = "rejected";
+                booking.Status = "canceled";
                 await _context.SaveChangesAsync();
+
+                var guest = await _context.Users.Where(g => g.User_Id == booking.Guest_Id)
+                                                .FirstOrDefaultAsync();
+
+                if(guest == null) return false;
+                await SendEmail(guest.Email, $" Hello {guest.Name}, your booking has been rejected by the host of the property.", "Rejected Booking");
+
 
                 return true;
             }
@@ -473,7 +485,7 @@ namespace NestQuest.Services
 
                 string photosDirectoryPath = @"C:\Users\hello\Desktop\photos\reportings";
 
-                string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-mm-dd")}.jpg";
+                string fileName = $"{dto.Property_Id}{dto.Start_Date.ToString("yyyy-MM-dd")}.jpg";
 
                 if (!Directory.Exists(photosDirectoryPath))
                 {

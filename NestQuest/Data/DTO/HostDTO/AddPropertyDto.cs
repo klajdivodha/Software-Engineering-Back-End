@@ -24,5 +24,8 @@
 
         public List<BedDto> Beds { get; set; }
         public List<UtilitiesDto> Utilities { get; set; }
+
+        //Property Images
+        public List<IFormFile> Images { get; set; }
     }
 }

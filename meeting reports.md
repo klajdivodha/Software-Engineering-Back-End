@@ -5,3 +5,4 @@ Meeting 1 Report:  <a href="https://docs.google.com/document/d/1nFt4EsAQ1Kk-8rw3
 <br> Meeting 5 Report: <a href = "https://docs.google.com/document/d/1h7mtAO5eu0ZQpzl2d_8SIVFmN5Lly2o8FRhH_-FwWJA/edit?usp=sharing"> Week 5 </a>
 <br> Meeting 6 Report: <a href = "https://docs.google.com/document/d/1aV5g-kK_l1Wxi5Z5_J5XuLIzA9z2V1WRWPNqai127Cs/edit?usp=sharing"> Week 6 </a>
 <br> Meeting 7 Report: <a href = "https://docs.google.com/document/d/1xfeyzB_sKYnOF39hOprrQWQzz_E_5X4zALbvw5QJyo8/edit?usp=sharing"> Week 7 </a>
+<br> Meeting 8 Report: <a href = "https://docs.google.com/document/d/1ZQWtEHf110FPyn-P32aUkD59y-p240bXkT8Vq56Up0g/edit?usp=sharing"> Week 8 </a>

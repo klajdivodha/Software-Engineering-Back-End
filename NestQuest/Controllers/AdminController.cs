@@ -103,12 +103,12 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpPatch("DontAppropeveReporting")]
-        public async Task<IActionResult> DontAppropeveReporting([FromBody]ReportingsDto dto)
+        [HttpPatch("DontApproveReporting")]
+        public async Task<IActionResult> DontApproveReporting([FromBody]ReportingsDto dto)
         {
             try
             {
-                var rezult= await _adminServices.DontAppropeveReporting(dto);
+                var rezult= await _adminServices.DontApproveReporting(dto);
                 if(rezult == -1) { return NotFound(dto); }
                 if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok();
@@ -119,8 +119,8 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpPatch("AppropeveGuestReporting")]
-        public async Task<IActionResult> AppropeveGuestReporting([FromBody] ApproveReportingDto dto)
+        [HttpPatch("ApproveGuestReporting")]
+        public async Task<IActionResult> ApproveGuestReporting([FromBody] ApproveReportingDto dto)
         {
             try
             {
@@ -135,12 +135,12 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpPatch("AppropeveHostReporting")]
-        public async Task<IActionResult> AppropeveHostReporting([FromBody] AprvHostReportingDto dto)
+        [HttpPatch("ApproveHostReporting")]
+        public async Task<IActionResult> ApproveHostReporting([FromBody] AprvHostReportingDto dto)
         {
             try
             {
-                var rezult = await _adminServices.AppropeHostReporting(dto);
+                var rezult = await _adminServices.ApproveHostReporting(dto);
                 if (rezult == -1) { return NotFound(); }
                 if (rezult == 0) { return StatusCode(500, "Internal Server Error"); }
                 return Ok();

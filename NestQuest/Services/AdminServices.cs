@@ -16,9 +16,9 @@ namespace NestQuest.Services
         public Task<int> DontApproveHost(int id);
         public Task<object[]> GetGuestReportings();
         public Task<object[]> GetHostReportings();
-        public Task<int> DontAppropeveReporting(ReportingsDto dto);
+        public Task<int> DontApproveReporting(ReportingsDto dto);
         public Task<int> ApproveGuestReporting(ApproveReportingDto dto);
-        public Task<int> AppropeHostReporting(AprvHostReportingDto dto);
+        public Task<int> ApproveHostReporting(AprvHostReportingDto dto);
         public Task<object[]> GetRevenue(); 
     }
     public class AdminServices : IAdminServices
@@ -52,7 +52,7 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<int> AppropeHostReporting(AprvHostReportingDto dto)
+        public async Task<int> ApproveHostReporting(AprvHostReportingDto dto)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace NestQuest.Services
             }
         }
 
-        public async Task<int> DontAppropeveReporting(ReportingsDto dto)
+        public async Task<int> DontApproveReporting(ReportingsDto dto)
         {
             try
             {

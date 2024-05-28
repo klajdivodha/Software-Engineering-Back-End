@@ -33,8 +33,8 @@ namespace NestQuest.Controllers
             }
         }
 
-        [HttpGet("GetPropertie/{id}")]
-        public async Task<IActionResult> PropertieInfo(string id)
+        [HttpGet("GetProperty/{id}")]
+        public async Task<IActionResult> PropertyInfo(string id)
         {
             try
             {
